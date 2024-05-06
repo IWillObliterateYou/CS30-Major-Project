@@ -111,8 +111,12 @@ function draw() {
 }
 
 function checkIfOnDoor(levelDoors) {
+  // check if the previous tile was a door with another for loop
+  && currentLevel[player.previousYPosition][player.previousXPosition] 
+
   for (let doorNumber = 0; doorNumber < levelDoors.length; doorNumber ++) {
-    if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1]) { 
+    if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1] 
+) { 
       levelShift(levels.levelTwo, levelDoors[doorNumber][0], levelDoors[doorNumber][1], levelDoors[doorNumber][2]);
     }
   }
