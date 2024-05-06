@@ -31,8 +31,7 @@ const GRASS = 0;
 const PATHWAY = 3;
 let movementOfScreenX;
 let movementOfScreenY;
-let previousPlayerTile;
-let hasMovedOffDoor = false;
+let previousPlayerTileType;
 
 // the ratio under no circumstances can be changed, everything will break
 const TILESONSCREENHORIZONTALLY = 21;
@@ -74,7 +73,7 @@ function givePropertiesToTiles() {
     isPassible: true,
     texture: grassImage,
   };
-  previousPlayerTile = grass; // despite not technically fitting the bill of the function, this is important to be here as grass as an object does not exist before here, 
+  previousPlayerTileType = grass; // despite not technically fitting the bill of the function, this is important to be here as grass as an object does not exist before here, 
   // previousPlayerTile can be set to anything, it just indicates what the player is initially standing on
   pathway = {
     isPassible: true,
@@ -88,6 +87,8 @@ function givePropertiesToNPCsAndPlayer() {
     yPosition: Math.floor(levels.levelOne.length / 2),
     xPosition: Math.floor(levels.levelOne[Math.floor(levels.levelOne.length / 2)].length / 2),
     texture: playerImage,
+    previousXPosition: Math.floor(levels.levelOne.length / 2),
+    previousYPosition: Math.floor(levels.levelOne[Math.floor(levels.levelOne.length / 2)].length / 2),
   };
 }
 
@@ -111,10 +112,8 @@ function draw() {
 
 function checkIfOnDoor(levelDoors) {
   for (let doorNumber = 0; doorNumber < levelDoors.length; doorNumber ++) {
-    if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1] 
-      && hasMovedOffDoor) { // checks to ensure you have come from a different tile, so you don't constantly switch
+    if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1]) { 
       levelShift(levels.levelTwo, levelDoors[doorNumber][0], levelDoors[doorNumber][1], levelDoors[doorNumber][2]);
-      hasMovedOffDoor = false; // doesn't do anything currently
     }
   }
 }
@@ -180,12 +179,12 @@ function drawLevel(level) {
 
 function movePlayer(xMovement, yMovement) {
   // old location
-  let oldPlayerX = player.xPosition;
-  let oldPlayerY = player.yPosition;
+  player.previousXPosition = player.xPosition;
+  player.previousYPosition = player.yPosition;
 
   // reset old location to be whatever the last tile was
-  currentLevel[oldPlayerY][oldPlayerX] = previousPlayerTile;
-  previousPlayerTile = currentLevel[player.yPosition + yMovement][player.xPosition + xMovement];
+  currentLevel[player.previousYPosition][player.previousXPosition] = previousPlayerTileType;
+  previousPlayerTileType = currentLevel[player.yPosition + yMovement][player.xPosition + xMovement];
 
   // move player in code
   player.xPosition += xMovement;
