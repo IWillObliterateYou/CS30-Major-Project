@@ -102,7 +102,7 @@ function draw() {
 
   drawCurrentLevel();
 
-  shouldTileBeTreatedAsDoor(levels.levelOneEntriesAndExits);
+  shouldTileBeTreatedAsDoor(levels.levelOneDoors);
 }
 
 // uses the levels.json, each level has an entries and exits sister property with a similar name
@@ -110,11 +110,22 @@ function draw() {
 // the first number is the y position, the second is the x position, the string is the "code" for the entrance
 // because each door is only connected to one other point, each link has a unique name within its property, whatever code matches in a different level is the one that you will enter into
 // it is a bit overcomplicated for such a small amount of simple levels, but it is meant to be upscaled easily
-function levelShift(levelToShiftTo, code) {
-  currentLevel = levelToShiftTo;
+function levelShift(levelCode, doorCode) {
+  if (levelCode === "l2") {
+    currentLevel = levels.levelTwo;
+  }
 
-  for (let door of levelOneEntriesAndExits) {
-    if (door[2] === )
+
+  let currentDoorCode;
+  for (let firstDoor of levels.levelOneDoor) {
+    currentDoorCode = firstDoor[2];
+    for (let secondDoor of levels.levelTwoDoors) {
+      if (currentDoorCode === secondDoor[2]) {
+        player.xPosition = secondDoor[1];
+        player.yPosition = secondDoor[0];
+      }
+    }
+
 
 
 
@@ -148,7 +159,8 @@ function shouldTileBeTreatedAsDoor(levelDoors) {
   for (let doorNumber = 0; doorNumber < levelDoors.length; doorNumber ++) {
     if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1]
       && checkIfLastTileWasADoor(levelDoors) === false) { 
-      levelShift(levels.levelTwo, levelDoors[doorNumber][2]);
+      console.log("sucess");
+      levelShift(levelDoors[doorNumber][3], levelDoors[doorNumber][2]);
     }
   }
 }
