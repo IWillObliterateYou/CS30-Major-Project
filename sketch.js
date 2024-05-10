@@ -29,6 +29,7 @@ let movementOfScreenX;
 let movementOfScreenY;
 let previousPlayerTileType;
 let wasLastTileDoor = false;
+let doors;
 
 // for use in the level arrays; defines what numbers correspond to which objects
 const PLAYER = 5;
@@ -45,6 +46,7 @@ function preload() {
   grassImage = loadImage("assets/tiles/grass.jpg");
   highGroundImage = loadImage("assets/tiles/highGround.png");
   levels = loadJSON("levels.json");
+  doors = loadJSON("doors.json");
   playerImage = loadImage("assets/sprites/player.jpg");
   pathwayImage = loadImage("assets/tiles/pathway.jpg");
 }
