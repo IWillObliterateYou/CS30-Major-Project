@@ -4,13 +4,13 @@
 This is a, quite small, open world RPG style game with turn-based combat on a grid. 
 
 ## Needs to Have
-- Five tile types
-- Three screens 
+- Three screens/levels
 - Two types of enemies
 - Enemies made with classes
 - Very basic enemy movement ai
 - Turn based combat
 - Hold WASD to move, so no spamming is required
+- Sound effects/music
 
 ## Nice to Have
 - More than three screens

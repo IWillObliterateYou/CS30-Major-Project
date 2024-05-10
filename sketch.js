@@ -104,43 +104,45 @@ function draw() {
 
   drawCurrentLevel();
 
-  shouldTileBeTreatedAsDoor(levels.levelOneDoors);
+  shouldTileBeTreatedAsDoor(doors.levelOne);
 }
 
-// uses the levels.json, each level has an entries and exits sister property with a similar name
-// the scheme is: each array within the property is one entrance/exit (because you can backtrack)
-// the first number is the y position, the second is the x position, the string is the "code" for the entrance
+// uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
+// the scheme is: each array within the property is one two-way door (because you can backtrack)
+// the first number is the y position, the second is the x position, the third is the "code" for the entrance, 
+// the fourth is the code for the level to go to, the fifth is the required y screen shift value to be set (importantly, set, not shifted), the sixth is the required x screen shift to be set
 // because each door is only connected to one other point, each link has a unique name within its property, whatever code matches in a different level is the one that you will enter into
 // it is a bit overcomplicated for such a small amount of simple levels, but it is meant to be upscaled easily
 function levelShift(levelCode, doorCode) {
-  if (levelCode === "l2") {
+  if (levelCode === "l1") {
+    currentLevel = levels.levelOne;
+    currentDoorSet = doors.levelOne;
+    // this converts level codes to levels which can be added to the tail of stuff like doors.(insert here)
+    for (let quickConversion of currentDoorSet) {
+      
+    }
+  }
+  else if (levelCode === "l2") {
     currentLevel = levels.levelTwo;
   }
 
 
-  let currentDoorCode;
-  for (let firstDoor of levels.levelOneDoor) {
-    currentDoorCode = firstDoor[2];
-    for (let secondDoor of levels.levelTwoDoors) {
-      if (currentDoorCode === secondDoor[2]) {
-        player.xPosition = secondDoor[1];
-        player.yPosition = secondDoor[0];
-      }
+  let currentDoorCode = doorCode;
+
+  for (let secondDoor of currentDoorSet) {
+    if (currentDoorCode === secondDoor[2]) {
+      // setting up the player as needed where it needs to be
+      player.xPosition = secondDoor[1];
+      player.yPosition = secondDoor[0];
+      movementOfScreenY = secondDoor[4];
+      movementOfScreenX = secondDoor[5];
+
+      // moving the player sprite
+      currentLevel[player.yPosition][player.xPosition] = player;
+
+      // only one door can (and should) activate at once, so just end the function here
+      return true;
     }
-
-
-
-
-
-
-// not done
-
-
-
-
-
-
-
   }
 }
 
@@ -155,13 +157,12 @@ function checkIfLastTileWasADoor(levelDoors) {
   return false;
 }
 
-function shouldTileBeTreatedAsDoor(levelDoors) { 
+function shouldTileBeTreatedAsDoor(levelDoors) {
   // importantly this does not check if this tile is a door, because if you enter a level through a passageway were more than one door are directly 
   // adjacent and you move into one of those, level shift should not be triggered
-  for (let doorNumber = 0; doorNumber < levelDoors.length; doorNumber ++) {
+  for (let doorNumber = 0; doorNumber < levelDoors.length; doorNumber++) {
     if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1]
-      && checkIfLastTileWasADoor(levelDoors) === false) { 
-      console.log("sucess");
+      && checkIfLastTileWasADoor(levelDoors) === false) {
       levelShift(levelDoors[doorNumber][3], levelDoors[doorNumber][2]);
     }
   }
