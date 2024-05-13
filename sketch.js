@@ -117,7 +117,9 @@ function draw() {
 // because each door is only connected to one other point, each link has a unique name within its property, whatever code matches in a different level is the one that you will enter into
 // it is a bit overcomplicated for such a small amount of simple levels, but it is meant to be upscaled easily
 function levelShift(levelCode, doorCode) {
-  console.log("success");
+// replace last tile to grass or whatever it needs to be before shifting 
+  currentLevel[player.yPosition][player.xPosition] = previousPlayerTileType;
+  previousPlayerTileType = currentLevel[player.yPosition][player.xPosition];
 
   if (levelCode === "l1") {
     currentLevel = levels.levelOne;
@@ -126,6 +128,18 @@ function levelShift(levelCode, doorCode) {
   else if (levelCode === "l2") {
     currentLevel = levels.levelTwo;
     currentDoorSet = doors.levelTwo;
+  }
+  else if (levelCode === "l3") {
+
+
+
+
+
+
+
+
+    currentLevel = levels.levelThree;
+    currentDoorSet = doors.levelThree;
   }
 
 
@@ -149,6 +163,17 @@ function levelShift(levelCode, doorCode) {
 }
 
 function checkIfLastTileWasADoor(levelDoors) {
+  // currently not working
+
+
+
+
+
+
+
+
+
+
   // check if the previous tile was a door with another for loop
   // is there a way to check if a value exists anywhere in an array outside of a for loop? 
   for (let door of levelDoors) {
