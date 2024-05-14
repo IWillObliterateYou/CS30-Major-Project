@@ -134,6 +134,10 @@ function levelShift(levelCode, doorCode) {
 
 
 // use maps to call doors by code
+// might have to move doors to sketch
+// there should be a method were I can keep it in the JSON
+// https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
+// saveJSON
 
 
 
