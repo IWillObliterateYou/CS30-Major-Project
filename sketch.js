@@ -25,12 +25,11 @@ let pathway;
 let pathwayImage;
 let firstIteration = true; // checks that this level load is the very first on the game preforms
 let currentLevel;
-let currentDoorSet;
+let CurrentDoorSet;
 let movementOfScreenX;
 let movementOfScreenY;
 let previousPlayerTileType;
 let lastTileWasADoor = false;
-let doors;
 let dooredLastTurn;
 
 // for use in the level arrays; defines what numbers correspond to which objects
@@ -48,7 +47,6 @@ function preload() {
   grassImage = loadImage("assets/tiles/grass.jpg");
   highGroundImage = loadImage("assets/tiles/highGround.png");
   levels = loadJSON("levels.json");
-  doors = loadJSON("doors.json");
   playerImage = loadImage("assets/sprites/player.jpg");
   pathwayImage = loadImage("assets/tiles/pathway.jpg");
 }
@@ -69,7 +67,7 @@ function setup() {
 
   // sets the default level to levelOne
   currentLevel = levels.levelOne;
-  currentDoorSet = doors.levelOne;
+  CurrentDoorSet = LVL_ONE_DOORS;
   levels.levelOne[player.yPosition][player.xPosition] = PLAYER; // where the player starts off in level one
 }
 
@@ -107,8 +105,32 @@ function draw() {
 
   drawCurrentLevel();
 
-  shouldTileBeTreatedAsDoor(currentDoorSet);
+  shouldTileBeTreatedAsDoor(CurrentDoorSet);
 }
+
+
+// temporary maps of the doors in the sketch instead of JSON
+const LVL_ONE_DOORS = new Map([
+  ["e1", [14, 30, "l2", -9, -10]],
+  ["e2", [15, 30, "l2", -10, -10]],
+  ["e3", [16, 30, "l2", -11, -10]]
+]);
+
+const LVL_TWO_DOORS = new Map([
+  ["e1", [4, 0, "l1", 0, 0]],
+  ["e2", [5, 0, "l1", 0, 0]],
+  ["e3", [6, 0, "l1", 0, 0]],
+  ["2e1", [4, 20, "l3", 0, 0]],
+  ["2e2", [5, 20, "l3", 0, 0]],
+  ["2e3", [6, 20, "l3", 0, 0]]
+]);
+
+const LVL_THREE_DOORS = new Map([
+  ["2e1", [18, 0, "l2", 0, 0]],
+  ["2e2", [19, 0, "l2", 0, 0]],
+  ["2e3", [20, 0, "l2", 0, 0]]
+]);
+
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
 // the scheme is: each array within the property is one two-way door (because you can backtrack)
@@ -117,87 +139,88 @@ function draw() {
 // because each door is only connected to one other point, each link has a unique name within its property, whatever code matches in a different level is the one that you will enter into
 // it is a bit overcomplicated for such a small amount of simple levels, but it is meant to be upscaled easily
 function levelShift(levelCode, doorCode) {
-// replace last tile to grass or whatever it needs to be before shifting 
+  // replace last tile to grass or whatever it needs to be before shifting 
   currentLevel[player.yPosition][player.xPosition] = previousPlayerTileType;
   previousPlayerTileType = currentLevel[player.yPosition][player.xPosition];
 
+  let ExitDoorSet;
+
   if (levelCode === "l1") {
     currentLevel = levels.levelOne;
-    currentDoorSet = doors.levelOne;
+    ExitDoorSet = LVL_ONE_DOORS;
   }
   else if (levelCode === "l2") {
     currentLevel = levels.levelTwo;
-    currentDoorSet = doors.levelTwo;
+    ExitDoorSet = LVL_TWO_DOORS;
   }
   else if (levelCode === "l3") {
-
-
-
-// use maps to call doors by code
-// might have to move doors to sketch
-// there should be a method were I can keep it in the JSON
-// https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
-// saveJSON
-
-
-
-
     currentLevel = levels.levelThree;
-    currentDoorSet = doors.levelThree;
+    ExitDoorSet = LVL_THREE_DOORS;
   }
 
 
-  let currentDoorCode = doorCode;
+  // goal: move doors to the doors.JSON
+  // https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
+  // saveJSON
 
-  for (let secondDoor of currentDoorSet) {
-    if (currentDoorCode === secondDoor[2]) {
-      // setting up the player as needed where it needs to be
-      player.xPosition = secondDoor[1];
-      player.yPosition = secondDoor[0];
-      movementOfScreenY = secondDoor[4];
-      movementOfScreenX = secondDoor[5];
 
-      // moving the player sprite
-      currentLevel[player.yPosition][player.xPosition] = player;
 
-      // only one door can (and should) activate at once, so just end the function here
-      return true;
-    }
-  }
+  let secondDoor = ExitDoorSet.get(doorCode);
+
+  // setting up the player as needed where it needs to be
+
+  player.xPosition = secondDoor[1];
+  player.yPosition = secondDoor[0];
+  movementOfScreenY = secondDoor[3];
+  movementOfScreenX = secondDoor[4];
+
+  // moving the player sprite
+  currentLevel[player.yPosition][player.xPosition] = player;
+
+  // setting the exit set to now be the current set and removing the exit set
+  CurrentDoorSet = ExitDoorSet;
+  ExitDoorSet = "";
+
+
+  // only one door can (and should) activate at once, so just end the function here
+  return;
 }
 
 function checkIfLastTileWasADoor(levelDoors) {
-  // currently not working
-
-
-
-
-
-
-
-
+  // check if the previous tile was a door with another for loop
+  // this is for a map
+  for (let [key, value] of levelDoors) {
+    if (value[0] === player.previousYPosition && value[1] === player.previousXPosition) {
+      lastTileWasADoor = true;
+    }
+    else {
+      lastTileWasADoor = false;
+    }
+  }
 
 
   // check if the previous tile was a door with another for loop
-  // is there a way to check if a value exists anywhere in an array outside of a for loop? 
-  for (let door of levelDoors) {
-    if (door[0] === player.previousYPosition && door[1] === player.previousXPosition) { //  checking if last turn was on a door on the same level {
-      lastTileWasADoor = true;
-    }
-    lastTileWasADoor = false;
-  }
+  // this is for an array
+  // for (let door of levelDoors) {
+  //   if (door[0] === player.previousYPosition && door[1] === player.previousXPosition) { //  checking if last turn was on a door on the same level {
+  //     lastTileWasADoor = true;
+  //   }
+  //   lastTileWasADoor = false;
+  // }
 }
 
 function shouldTileBeTreatedAsDoor(levelDoors) {
+  // level doors is the initially the LVL_ONE_DOORS map
+
   checkIfLastTileWasADoor(levelDoors);
 
   // importantly this does not check if this tile is a door, because if you enter a level through a passageway were more than one door are directly 
   // adjacent and you move into one of those, level shift should not be triggered
-  for (let doorNumber = 0; doorNumber < levelDoors.length; doorNumber++) {
-    if (player.yPosition === levelDoors[doorNumber][0] && player.xPosition === levelDoors[doorNumber][1]
+  for (let [key, value] of levelDoors) {
+    if (player.yPosition === value[0] && player.xPosition === value[1]
       && lastTileWasADoor === false
       && dooredLastTurn === false) { // checking if the last turn was followed by a levelshift
-      levelShift(levelDoors[doorNumber][3], levelDoors[doorNumber][2]);
+      levelShift(value[2], key);
       dooredLastTurn = true;
     }
   }
