@@ -126,16 +126,16 @@ const LVL_TWO_DOORS = new Map([
 ]);
 
 const LVL_THREE_DOORS = new Map([
-  ["2e1", [18, 0, "l2", 0, 0]],
-  ["2e2", [19, 0, "l2", 0, 0]],
-  ["2e3", [20, 0, "l2", 0, 0]]
+  ["2e1", [18, 0, "l2", -13, 0]],
+  ["2e2", [19, 0, "l2", -14, 0]],
+  ["2e3", [20, 0, "l2", -15, 0]]
 ]);
 
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
 // the scheme is: each array within the property is one two-way door (because you can backtrack)
-// the first number is the y position, the second is the x position, the third is the "code" for the entrance, 
-// the fourth is the code for the level to go to, the fifth is the required y screen shift value to be set (importantly, set, not shifted), the sixth is the required x screen shift to be set
+// the key is the "code" for the door, the first number in the array is the y position, the second is the x position, 
+// the third is the code for the level to go to, the fourth is the required y screen shift value to be set (importantly, set, not shifted), the fifth is the required x screen shift to be set
 // because each door is only connected to one other point, each link has a unique name within its property, whatever code matches in a different level is the one that you will enter into
 // it is a bit overcomplicated for such a small amount of simple levels, but it is meant to be upscaled easily
 function levelShift(levelCode, doorCode) {
@@ -304,6 +304,20 @@ function movePlayer(xMovement, yMovement) {
 }
 
 function keyPressed() {
+  // screen scroll is broken again with roof cross line
+
+
+
+
+
+
+
+
+
+
+
+
+
   // I am fully aware that checking if the block I am about to run into is solid 16 times is inefficient, 
   // as is spreading out all the possible circumstances of how you can move and if the screen should scroll. 
   // however, due to a major bug explained in my 2D array project, I cannot do it that way
@@ -332,15 +346,22 @@ function keyPressed() {
   // on cross line
   // at top
   else if (player.yPosition === Math.floor(TILES_ON_SCREEN_VERTICALLY / 2)) {
+
+
     if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
       movePlayer(0, -1);
     }
     // extra check added to see if the level is the size of the level, which would cause screen to scroll when it shouldn't
-    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true && player.yPosition !== Math.floor(TILES_ON_SCREEN_VERTICALLY / 2)) {
-      movementOfScreenY -= 1;
+
+
+
+    // that checking is breaking stuff
+    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true && currentLevel.length !== TILES_ON_SCREEN_VERTICALLY) {
       movePlayer(0, 1);
+      console.log("success");
     }
     else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
+      movementOfScreenY -= 1;
       movePlayer(0, 1);
     }
   }
