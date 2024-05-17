@@ -304,20 +304,6 @@ function movePlayer(xMovement, yMovement) {
 }
 
 function keyPressed() {
-  // screen scroll is broken again with roof cross line
-
-
-
-
-
-
-
-
-
-
-
-
-
   // I am fully aware that checking if the block I am about to run into is solid 16 times is inefficient, 
   // as is spreading out all the possible circumstances of how you can move and if the screen should scroll. 
   // however, due to a major bug explained in my 2D array project, I cannot do it that way
@@ -352,13 +338,8 @@ function keyPressed() {
       movePlayer(0, -1);
     }
     // extra check added to see if the level is the size of the level, which would cause screen to scroll when it shouldn't
-
-
-
-    // that checking is breaking stuff
-    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true && currentLevel.length !== TILES_ON_SCREEN_VERTICALLY) {
+    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true && currentLevel.length === TILES_ON_SCREEN_VERTICALLY) {
       movePlayer(0, 1);
-      console.log("success");
     }
     else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
       movementOfScreenY -= 1;
