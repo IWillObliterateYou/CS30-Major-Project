@@ -1,10 +1,3 @@
-// tentative goal = move the player off the grid onto an overlay grid alongside other sprites like enemies
-
-
-
-
-
-
 // 2D Array Project: An RPG Proof of Concept
 // Seth Gardiner
 // April 30th 2024
@@ -38,6 +31,7 @@ let movementOfScreenY;
 let previousPlayerTileType;
 let lastTileWasADoor = false;
 let dooredLastTurn;
+let spriteGrid;
 
 // for use in the level arrays; defines what numbers correspond to which objects
 const PLAYER = 5;
@@ -76,6 +70,8 @@ function setup() {
   currentLevel = levels.levelOne;
   CurrentDoorSet = LVL_ONE_DOORS;
   levels.levelOne[player.yPosition][player.xPosition] = PLAYER; // where the player starts off in level one
+
+  generateSpriteOverlayGrid();
 }
 
 function givePropertiesToTiles() {
@@ -190,6 +186,7 @@ function levelShift(levelCode, doorCode) {
   CurrentDoorSet = ExitDoorSet;
   ExitDoorSet = "";
 
+  generateSpriteOverlayGrid;
 
   // only one door can (and should) activate at once, so just end the function here
   return;
@@ -294,6 +291,21 @@ function drawCurrentLevel(level) {
   }
 }
 
+function generateSpriteOverlayGrid() {
+  spriteGrid = [];
+  // this uses the exact same logic as the illustrations so it should be the same dimensions as the level
+  for (let y = 0; y < currentLevel.length; y++) {
+    // setting up the sprite grid 2D array
+    spriteGrid.push([]);
+    for (let x = 0; x < currentLevel[y].length; x++) {
+      // insert any enemy type as an && currentLevel[y][x] !== (insert here)
+      if (currentLevel[y][x] !== PLAYER) {
+        spriteGrid.push("");
+      }
+    }
+  }
+}
+
 function movePlayer(xMovement, yMovement) {
   dooredLastTurn = false;
   // old location
@@ -313,6 +325,14 @@ function movePlayer(xMovement, yMovement) {
 }
 
 function keyPressed() {
+  // troubleshooting 
+  if (key === "z") {
+    console.log(spriteGrid);
+  }
+
+
+
+
   // I am fully aware that checking if the block I am about to run into is solid 16 times is inefficient, 
   // as is spreading out all the possible circumstances of how you can move and if the screen should scroll. 
   // however, due to a major bug explained in my 2D array project, I cannot do it that way
