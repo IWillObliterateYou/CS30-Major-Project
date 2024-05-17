@@ -25,4 +25,4 @@ This is a, quite small, open world RPG style game with turn-based combat on a gr
 - "Art"
 - Levelling
 - Sprinting
-- Opening/Death screenss
+- Opening/Death screens

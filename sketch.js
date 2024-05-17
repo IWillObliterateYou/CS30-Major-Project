@@ -1,3 +1,10 @@
+// tentative goal = move the player off the grid onto an overlay grid alongside other sprites like enemies
+
+
+
+
+
+
 // 2D Array Project: An RPG Proof of Concept
 // Seth Gardiner
 // April 30th 2024
@@ -81,7 +88,7 @@ function givePropertiesToTiles() {
     isPassible: true,
     texture: grassImage,
   };
-  previousPlayerTileType = grass; // despite not technically fitting the bill of the function, this is important to be here as grass as an object does not exist before here, 
+  previousPlayerTileType = PATHWAY; // despite not technically fitting the bill of the function, this is important to be here as an object does not exist before here, 
   // previousPlayerTile can be set to anything, it just indicates what the player is initially standing on
   pathway = {
     isPassible: true,
@@ -110,6 +117,8 @@ function draw() {
 
 
 // temporary maps of the doors in the sketch instead of JSON
+// because of this, the doors.JSON does absolutely nothing
+// important note: doors need to be hardcodes, any map changes must be checked with the doors 
 const LVL_ONE_DOORS = new Map([
   ["e1", [14, 30, "l2", -9, -10]],
   ["e2", [15, 30, "l2", -10, -10]],
