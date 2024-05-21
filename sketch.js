@@ -28,13 +28,14 @@ let currentLevel;
 let CurrentDoorSet;
 let movementOfScreenX;
 let movementOfScreenY;
-let previousPlayerTileType;
 let lastTileWasADoor = false;
 let dooredLastTurn;
 let spriteGrid;
 
-// for use in the level arrays; defines what numbers correspond to which objects
+// for the sprite grid
 const PLAYER = 5;
+
+// for use in the level arrays; defines what numbers correspond to which objects
 const GRASS = 0;
 const HIGHGROUND = 1;
 const PATHWAY = 3;
@@ -69,7 +70,6 @@ function setup() {
   // sets the default level to levelOne
   currentLevel = levels.levelOne;
   CurrentDoorSet = LVL_ONE_DOORS;
-  levels.levelOne[player.yPosition][player.xPosition] = PLAYER; // where the player starts off in level one
 
   generateSpriteOverlayGrid();
 }
@@ -84,8 +84,6 @@ function givePropertiesToTiles() {
     isPassible: true,
     texture: grassImage,
   };
-  previousPlayerTileType = PATHWAY; // despite not technically fitting the bill of the function, this is important to be here as an object does not exist before here, 
-  // previousPlayerTile can be set to anything, it just indicates what the player is initially standing on
   pathway = {
     isPassible: true,
     texture: pathwayImage,
@@ -107,6 +105,7 @@ function draw() {
   background(220);
 
   drawCurrentLevel();
+  drawSpriteGrid();
 
   shouldTileBeTreatedAsDoor(CurrentDoorSet);
 }
@@ -144,10 +143,6 @@ const LVL_THREE_DOORS = new Map([
 // because each door is only connected to one other point, each link has a unique name within its property, whatever code matches in a different level is the one that you will enter into
 // it is a bit overcomplicated for such a small amount of simple levels, but it is meant to be upscaled easily
 function levelShift(levelCode, doorCode) {
-  // replace last tile to grass or whatever it needs to be before shifting 
-  currentLevel[player.yPosition][player.xPosition] = previousPlayerTileType;
-  previousPlayerTileType = currentLevel[player.yPosition][player.xPosition];
-
   let ExitDoorSet;
 
   if (levelCode === "l1") {
@@ -203,16 +198,6 @@ function checkIfLastTileWasADoor(levelDoors) {
       lastTileWasADoor = false;
     }
   }
-
-
-  // check if the previous tile was a door with another for loop
-  // this is for an array
-  // for (let door of levelDoors) {
-  //   if (door[0] === player.previousYPosition && door[1] === player.previousXPosition) { //  checking if last turn was on a door on the same level {
-  //     lastTileWasADoor = true;
-  //   }
-  //   lastTileWasADoor = false;
-  // }
 }
 
 function shouldTileBeTreatedAsDoor(levelDoors) {
@@ -248,13 +233,20 @@ function convertLevelArrayFromNumbersToObjects() {
         // replace numbers with objects in the level array
         currentLevel[y][x] = grass;
       }
-      else if (currentLevel[y][x] === PLAYER) {
-        // replace numbers with objects in the level array
-        currentLevel[y][x] = player;
-      }
       else if (currentLevel[y][x] === PATHWAY) {
         // replace numbers with objects in the level array
         currentLevel[y][x] = pathway;
+      }
+    }
+  }
+}
+
+function convertSpriteGridToObjects() {
+  for (let y = 0; y < currentLevel.length; y++) {
+    for (let x = 0; x < currentLevel[y].length; x++) {
+      if (spriteGrid[y][x] === PLAYER) {
+        // replace numbers with objects in the sprite array
+        spriteGrid[y][x] = player;
       }
     }
   }
@@ -284,7 +276,19 @@ function drawCurrentLevel(level) {
       else if (currentLevel[y][x] === pathway) {
         image(pathway.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
-      else if (currentLevel[y][x] === player) {
+      else if (spriteGrid[y][x] === player) {
+        image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+      }
+    }
+  }
+}
+
+function drawSpriteGrid() {
+  convertSpriteGridToObjects();
+
+  for (let y = 0; y < spriteGrid.length; y++) {
+    for (let x = 0; x < spriteGrid[y].length; x++) {
+      if (spriteGrid[y][x] === player) {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
     }
@@ -299,8 +303,11 @@ function generateSpriteOverlayGrid() {
     spriteGrid.push([]);
     for (let x = 0; x < currentLevel[y].length; x++) {
       // insert any enemy type as an && currentLevel[y][x] !== (insert here)
-      if (currentLevel[y][x] !== PLAYER) {
-        spriteGrid.push("");
+      if (player.yPosition !== y || player.xPosition !== x) {
+        spriteGrid[y].push("");
+      }
+      else {
+        spriteGrid[y].push(PLAYER);
       }
     }
   }
@@ -312,16 +319,15 @@ function movePlayer(xMovement, yMovement) {
   player.previousXPosition = player.xPosition;
   player.previousYPosition = player.yPosition;
 
-  // reset old location to be whatever the last tile was
-  currentLevel[player.previousYPosition][player.previousXPosition] = previousPlayerTileType;
-  previousPlayerTileType = currentLevel[player.yPosition + yMovement][player.xPosition + xMovement];
+  // reset old location to be empty
+  spriteGrid[player.previousYPosition][player.previousXPosition] = "";
 
   // move player in code
   player.xPosition += xMovement;
   player.yPosition += yMovement;
 
   // move player in drawing
-  currentLevel[player.yPosition][player.xPosition] = player;
+  spriteGrid[player.yPosition][player.xPosition] = player;
 }
 
 function keyPressed() {
