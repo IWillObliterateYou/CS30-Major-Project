@@ -106,8 +106,7 @@ function draw() {
 
   drawCurrentLevel();
   drawSpriteGrid();
-
-  shouldTileBeTreatedAsDoor(CurrentDoorSet);
+  drawTallerTiles();
 }
 
 
@@ -159,7 +158,7 @@ function levelShift(levelCode, doorCode) {
   }
 
 
-  // goal: move doors to the doors.JSON
+  // goal: move doors to the doors.JSON which currently does nothing
   // https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
   // saveJSON
 
@@ -174,14 +173,14 @@ function levelShift(levelCode, doorCode) {
   movementOfScreenY = secondDoor[3];
   movementOfScreenX = secondDoor[4];
 
+  generateSpriteOverlayGrid();
+
   // moving the player sprite
-  currentLevel[player.yPosition][player.xPosition] = player;
+  spriteGrid[player.yPosition][player.xPosition] = player;
 
   // setting the exit set to now be the current set and removing the exit set
   CurrentDoorSet = ExitDoorSet;
   ExitDoorSet = "";
-
-  generateSpriteOverlayGrid;
 
   // only one door can (and should) activate at once, so just end the function here
   return;
@@ -191,6 +190,7 @@ function checkIfLastTileWasADoor(levelDoors) {
   // check if the previous tile was a door with another for loop
   // this is for a map
   for (let [key, value] of levelDoors) {
+    // this isn't working
     if (value[0] === player.previousYPosition && value[1] === player.previousXPosition) {
       lastTileWasADoor = true;
     }
@@ -205,16 +205,31 @@ function shouldTileBeTreatedAsDoor(levelDoors) {
 
   checkIfLastTileWasADoor(levelDoors);
 
+  // let temp = false;
+
   // importantly this does not check if this tile is a door, because if you enter a level through a passageway were more than one door are directly 
   // adjacent and you move into one of those, level shift should not be triggered
   for (let [key, value] of levelDoors) {
+    // something is wrong with this logic
     if (player.yPosition === value[0] && player.xPosition === value[1]
       && lastTileWasADoor === false
       && dooredLastTurn === false) { // checking if the last turn was followed by a levelshift
       levelShift(value[2], key);
       dooredLastTurn = true;
+      // the return strategy works for the first movement into a door, but for further doorws perhaps I could loop though the current door set and check for doors to ignore
+      return;
+      
+
+      // temp = true;
+      // try immediatly returning and setting dooredLastTurn to true
     }
   }
+  dooredLastTurn = false;
+
+  // works for the first time. references the temps
+  // if (!temp) {
+  //   dooredLastTurn = false;
+  // }
 }
 
 function centerScreenOnCharacter() {
@@ -266,18 +281,11 @@ function drawCurrentLevel(level) {
   // for every element of the level, check which type it is and displays it
   for (let y = 0; y < currentLevel.length; y++) {
     for (let x = 0; x < currentLevel[y].length; x++) {
-      if (currentLevel[y][x] === highGround) {
-        // places the image at the location
-        image(highGround.texture, (x + movementOfScreenX) * tileSize, (y - 0.5 + movementOfScreenY) * tileSize, tileSize, tileSize * 1.5);
-      }
-      else if (currentLevel[y][x] === grass) {
+      if (currentLevel[y][x] === grass) {
         image(grass.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
       else if (currentLevel[y][x] === pathway) {
         image(pathway.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
-      }
-      else if (spriteGrid[y][x] === player) {
-        image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
     }
   }
@@ -290,6 +298,17 @@ function drawSpriteGrid() {
     for (let x = 0; x < spriteGrid[y].length; x++) {
       if (spriteGrid[y][x] === player) {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+      }
+    }
+  }
+}
+
+function drawTallerTiles() {
+  for (let y = 0; y < currentLevel.length; y++) {
+    for (let x = 0; x < currentLevel[y].length; x++) {
+      if (currentLevel[y][x] === highGround) {
+        // taller tiles need to be able to overlap the player, so they need to by their own function to be drawn last
+        image(highGround.texture, (x + movementOfScreenX) * tileSize, (y - 0.5 + movementOfScreenY) * tileSize, tileSize, tileSize * 1.5);
       }
     }
   }
@@ -314,7 +333,6 @@ function generateSpriteOverlayGrid() {
 }
 
 function movePlayer(xMovement, yMovement) {
-  dooredLastTurn = false;
   // old location
   player.previousXPosition = player.xPosition;
   player.previousYPosition = player.yPosition;
@@ -328,6 +346,9 @@ function movePlayer(xMovement, yMovement) {
 
   // move player in drawing
   spriteGrid[player.yPosition][player.xPosition] = player;
+
+  
+  shouldTileBeTreatedAsDoor(CurrentDoorSet);
 }
 
 function keyPressed() {
