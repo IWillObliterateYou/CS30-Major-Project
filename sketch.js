@@ -1,10 +1,9 @@
-// 2D Array Project: An RPG Proof of Concept
+// 2D Array Project: An Slightly More Fleshed Out RPG Proof of Concept
 // Seth Gardiner
 // April 30th 2024
 //
 // Extra for Experts:
-// - logic, expandability
-// - many levels in one JSON, all retrievable
+// - 
 
 // in the level arrays
 // 0 is a grass
@@ -337,14 +336,6 @@ function movePlayer(xMovement, yMovement) {
 }
 
 function keyPressed() {
-  // troubleshooting 
-  if (key === "z") {
-    console.log(spriteGrid);
-  }
-
-
-
-
   // I am fully aware that checking if the block I am about to run into is solid 16 times is inefficient, 
   // as is spreading out all the possible circumstances of how you can move and if the screen should scroll. 
   // however, due to a major bug explained in my 2D array project, I cannot do it that way
