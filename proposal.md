@@ -13,6 +13,7 @@ This is a, quite small, open world RPG style game with turn-based combat on a gr
 - Sound effects/music
 
 ## Nice to Have
+- Change the way doors work so that you need to hit the edge of the screen instead of the last tile
 - More than three screens
 - More than two types of enemies
 - Inventory
