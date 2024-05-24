@@ -20,6 +20,7 @@ let grass;
 let tileSize;
 let playerImage;
 let player;
+let slime;
 let pathway;
 let pathwayImage;
 let firstIteration = true; // checks that this level load is the very first on the game preforms
@@ -33,6 +34,7 @@ let spriteGrid;
 
 // for the sprite grid
 const PLAYER = 5;
+const SLIME = 4;
 
 // for use in the level arrays; defines what numbers correspond to which objects
 const GRASS = 0;
@@ -133,6 +135,96 @@ const LVL_THREE_DOORS = new Map([
   ["2e3", [20, 0, "l2", -15, 0]]
 ]);
 
+class slimeEnemy {
+  constructor(x, y, level, aiType, startingDirection) {
+    this.xPosition = x;
+    this.yPosition = y;
+    this.level = level;
+    this.ai = aiType;
+    this.dy = 1; // enemy movement distance per movement vertically
+    this.dx = 1; // enemy movement distance per movement horizontally
+    let directionOfTravel = startingDirection;
+  }
+  movementTimer() {
+    // if (some timer goes here) {
+    //  one way or another aiActivate is called
+    // }
+  }
+  aiActivate() {
+    if (this.ai === "vertical") {
+      if (currentLevel[this.y - this.dy - 3][this.x].isPassible === true
+        && this.directionOfTravel === "up") {
+
+        this.directionOfTravel = "up";
+
+        this.move(0, -this.dy);
+      }
+      else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
+        && this.directionOfTravel === "up") {
+        this.directionOfTravel = "down";
+      }
+      else if (currentLevel[this.y - this.dy + 3][this.x].isPassible === true
+        && this.directionOfTravel === "down") {
+
+        this.directionOfTravel = "down";
+
+        this.move(0, this.dy);
+      }
+      else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
+        && this.directionOfTravel === "down") {
+        this.directionOfTravel = "up";
+      }
+    }
+    else if (this.ai === "horizontal") {
+      if (currentLevel[this.y][this.x - this.dx - 3].isPassible === true
+        && this.directionOfTravel === "left") {
+
+        this.directionOfTravel = "left";
+
+        this.move(-this.dx, 0);
+      }
+      else if (currentLevel[this.y][this.x - this.dx - 3].isPassible === false
+        && this.directionOfTravel === "left") {
+        this.directionOfTravel = "right";
+      }
+      else if (currentLevel[this.y + this.dx + 3][this.x].isPassible === true
+        && this.directionOfTravel === "right") {
+
+        this.directionOfTravel = "down";
+
+        this.move(this.dx, 0);
+      }
+      else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
+        && this.directionOfTravel === "down") {
+        this.directionOfTravel = "up";
+      }
+    }
+    else if (this.ai === "circle") {
+      // starts you in the bottom right corner of the circle, moves counterclockwise
+      if (this.ai === "vertical") {
+        if (currentLevel[this.y - this.dy][this.x].isPassible === true
+          && this.directionOfTravel === "up") {
+  
+          this.directionOfTravel = "up";
+  
+          this.move(0, -this.dy);
+        }
+    }
+  }
+  verticalBobAI() {
+
+  }
+  horizontalBobAI() {
+
+  }
+  circleAI() {
+
+  }
+  move(dx, dy) {
+    spriteGrid[this.yPosition + dy][this.xPosition + dx] = slime;
+    spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
+  }
+}
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
 // the scheme is: each array within the property is one two-way door (because you can backtrack)
@@ -247,6 +339,9 @@ function convertSpriteGridToObjects() {
         // replace numbers with objects in the sprite array
         spriteGrid[y][x] = player;
       }
+      else if (spriteGrid[y][x] === SLIME) {
+        spriteGrid[y][x] = slime;
+      }
     }
   }
 }
@@ -331,7 +426,7 @@ function movePlayer(xMovement, yMovement) {
   // move player in drawing
   spriteGrid[player.yPosition][player.xPosition] = player;
 
-  
+
   shouldTileBeTreatedAsDoor(CurrentDoorSet);
 }
 
