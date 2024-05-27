@@ -31,6 +31,7 @@ let movementOfScreenY;
 let lastTileWasADoor = false;
 let dooredLastTurn;
 let spriteGrid;
+let slimeImage;
 
 // for the sprite grid
 const PLAYER = 5;
@@ -52,6 +53,7 @@ function preload() {
   levels = loadJSON("levels.json");
   playerImage = loadImage("assets/sprites/player.jpg");
   pathwayImage = loadImage("assets/tiles/pathway.jpg");
+  slimeImage = loadImage("assets/sprites/slime.jpg");
 }
 
 function setup() {
@@ -135,93 +137,78 @@ const LVL_THREE_DOORS = new Map([
   ["2e3", [20, 0, "l2", -15, 0]]
 ]);
 
+const STARTING_SLIME_POSITIONS = [
+  [18, 12]];
+
 class slimeEnemy {
-  constructor(x, y, level, aiType, startingDirection) {
+  constructor(x, y, aiType, startingDirection, tileBeneath) {
     this.xPosition = x;
     this.yPosition = y;
-    this.level = level;
     this.ai = aiType;
     this.dy = 1; // enemy movement distance per movement vertically
     this.dx = 1; // enemy movement distance per movement horizontally
     let directionOfTravel = startingDirection;
+    this.movementCounter = 0;
   }
-  movementTimer() {
-    // if (some timer goes here) {
-    //  one way or another aiActivate is called
-    // }
+  movement() {
+    if (this.movementCounter > this.movementCounter + 1000) {
+      this.aiActivate();
+      this.movementCounter = millis();
+    }
   }
   aiActivate() {
     if (this.ai === "vertical") {
-      if (currentLevel[this.y - this.dy - 3][this.x].isPassible === true
-        && this.directionOfTravel === "up") {
-
-        this.directionOfTravel = "up";
-
-        this.move(0, -this.dy);
-      }
-      else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
-        && this.directionOfTravel === "up") {
-        this.directionOfTravel = "down";
-      }
-      else if (currentLevel[this.y - this.dy + 3][this.x].isPassible === true
-        && this.directionOfTravel === "down") {
-
-        this.directionOfTravel = "down";
-
-        this.move(0, this.dy);
-      }
-      else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
-        && this.directionOfTravel === "down") {
-        this.directionOfTravel = "up";
-      }
+      this.verticalShuffleAI();
     }
     else if (this.ai === "horizontal") {
-      if (currentLevel[this.y][this.x - this.dx - 3].isPassible === true
-        && this.directionOfTravel === "left") {
-
-        this.directionOfTravel = "left";
-
-        this.move(-this.dx, 0);
-      }
-      else if (currentLevel[this.y][this.x - this.dx - 3].isPassible === false
-        && this.directionOfTravel === "left") {
-        this.directionOfTravel = "right";
-      }
-      else if (currentLevel[this.y + this.dx + 3][this.x].isPassible === true
-        && this.directionOfTravel === "right") {
-
-        this.directionOfTravel = "down";
-
-        this.move(this.dx, 0);
-      }
-      else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
-        && this.directionOfTravel === "down") {
-        this.directionOfTravel = "up";
-      }
-    }
-    else if (this.ai === "circle") {
-      // starts you in the bottom right corner of the circle, moves counterclockwise
-      if (this.ai === "vertical") {
-        if (currentLevel[this.y - this.dy][this.x].isPassible === true
-          && this.directionOfTravel === "up") {
-  
-          this.directionOfTravel = "up";
-  
-          this.move(0, -this.dy);
-        }
+      this.horizontalShuffleAI;
     }
   }
-  verticalBobAI() {
+  verticalShuffleAI() {
+    if (currentLevel[this.y - this.dy - 3][this.x].isPassible === true
+      && this.directionOfTravel === "up") {
 
+      this.move(0, -this.dy);
+    }
+    else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
+      && this.directionOfTravel === "up") {
+      this.directionOfTravel = "down";
+    }
+    else if (currentLevel[this.y + this.dy + 3][this.x].isPassible === true
+      && this.directionOfTravel === "down") {
+
+      this.move(0, this.dy);
+    }
+    else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
+      && this.directionOfTravel === "down") {
+      this.directionOfTravel = "up";
+    }
   }
-  horizontalBobAI() {
+  horizontalShuffleAI() {
+    if (currentLevel[this.y][this.x - this.dx - 3].isPassible === true
+      && this.directionOfTravel === "left") {
 
+      this.move(-this.dx, 0);
+    }
+    else if (currentLevel[this.y][this.x - this.dx - 3].isPassible === false
+      && this.directionOfTravel === "left") {
+      this.directionOfTravel = "right";
+    }
+    else if (currentLevel[this.y][this.x + this.dx + 3].isPassible === true
+      && this.directionOfTravel === "right") {
+
+      this.move(this.dx, 0);
+    }
+    else if (currentLevel[this.y][this.x + this.dx + 3].isPassible === false
+      && this.directionOfTravel === "right") {
+      this.directionOfTravel = "left";
+    }
   }
   circleAI() {
-
+    // currently unused
   }
   move(dx, dy) {
-    spriteGrid[this.yPosition + dy][this.xPosition + dx] = slime;
+    spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
     spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
   }
 }
@@ -340,6 +327,7 @@ function convertSpriteGridToObjects() {
         spriteGrid[y][x] = player;
       }
       else if (spriteGrid[y][x] === SLIME) {
+        let slime = new slimeEnemy(x, y, "vertical", "up", GRASS);
         spriteGrid[y][x] = slime;
       }
     }
@@ -378,6 +366,9 @@ function drawSpriteGrid() {
       if (spriteGrid[y][x] === player) {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
+      if (spriteGrid[y][x] === slime) {
+        image(slime.texture , (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize)
+      }
     }
   }
 }
@@ -407,6 +398,7 @@ function generateSpriteOverlayGrid() {
       else {
         spriteGrid[y].push(PLAYER);
       }
+      for (let slimy of )
     }
   }
 }
