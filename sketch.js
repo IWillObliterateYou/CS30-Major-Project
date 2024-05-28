@@ -34,7 +34,7 @@ let spriteGrid;
 let slimeImage;
 
 // for the sprite grid
-const PLAYER = 5;
+const PLAYER = 5; // probably delete this
 const SLIME = 4;
 
 // for use in the level arrays; defines what numbers correspond to which objects
@@ -53,7 +53,7 @@ function preload() {
   levels = loadJSON("levels.json");
   playerImage = loadImage("assets/sprites/player.jpg");
   pathwayImage = loadImage("assets/tiles/pathway.jpg");
-  slimeImage = loadImage("assets/sprites/slime.jpg");
+  slimeImage = loadImage("assets/sprites/slime.png");
 }
 
 function setup() {
@@ -75,6 +75,7 @@ function setup() {
   CurrentDoorSet = LVL_ONE_DOORS;
 
   generateSpriteOverlayGrid();
+  spawnEnemies();
 }
 
 function givePropertiesToTiles() {
@@ -105,13 +106,10 @@ function givePropertiesToNPCsAndPlayer() {
 }
 
 function draw() {
-  background(220);
-
   drawCurrentLevel();
   drawSpriteGrid();
   drawTallerTiles();
 }
-
 
 // temporary maps of the doors in the sketch instead of JSON
 // because of this, the doors.JSON does absolutely nothing
@@ -137,11 +135,8 @@ const LVL_THREE_DOORS = new Map([
   ["2e3", [20, 0, "l2", -15, 0]]
 ]);
 
-const STARTING_SLIME_POSITIONS = [
-  [18, 12]];
-
 class slimeEnemy {
-  constructor(x, y, aiType, startingDirection, tileBeneath) {
+  constructor(x, y, aiType, startingDirection) {
     this.xPosition = x;
     this.yPosition = y;
     this.ai = aiType;
@@ -251,6 +246,7 @@ function levelShift(levelCode, doorCode) {
   movementOfScreenX = secondDoor[4];
 
   generateSpriteOverlayGrid();
+  spawnEnemies();
 
   // moving the player sprite
   spriteGrid[player.yPosition][player.xPosition] = player;
@@ -261,6 +257,25 @@ function levelShift(levelCode, doorCode) {
 
   // only one door can (and should) activate at once, so just end the function here
   return;
+}
+
+function spawnEnemies() {
+  for (let y = 0; y < spriteGrid.length; y++) {
+    for (let x = 0; x < spriteGrid[y].length; x++) {
+      if (currentLevel[y][x] === 4) {
+        spriteGrid[y][x] = new slimeEnemy(x, y, "vertical", "up");
+        currentLevel[y][x] = GRASS;
+      }
+    }
+  }
+}
+
+function titleScreen() {
+  // sky background
+  background("light blue");
+
+  // a mountain midground
+  // a forest foreground
 }
 
 function checkIfLastTileWasADoor(levelDoors) {
@@ -319,16 +334,12 @@ function convertLevelArrayFromNumbersToObjects() {
   }
 }
 
-function convertSpriteGridToObjects() {
+function convertSpritePlayerToObjectPlayer() {
   for (let y = 0; y < currentLevel.length; y++) {
     for (let x = 0; x < currentLevel[y].length; x++) {
       if (spriteGrid[y][x] === PLAYER) {
         // replace numbers with objects in the sprite array
         spriteGrid[y][x] = player;
-      }
-      else if (spriteGrid[y][x] === SLIME) {
-        let slime = new slimeEnemy(x, y, "vertical", "up", GRASS);
-        spriteGrid[y][x] = slime;
       }
     }
   }
@@ -359,15 +370,15 @@ function drawCurrentLevel(level) {
 }
 
 function drawSpriteGrid() {
-  convertSpriteGridToObjects();
+  convertSpritePlayerToObjectPlayer();
 
   for (let y = 0; y < spriteGrid.length; y++) {
     for (let x = 0; x < spriteGrid[y].length; x++) {
       if (spriteGrid[y][x] === player) {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
-      if (spriteGrid[y][x] === slime) {
-        image(slime.texture , (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize)
+      if (spriteGrid[y][x] instanceof slimeEnemy) {
+        image(slimeImage, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
     }
   }
@@ -392,13 +403,12 @@ function generateSpriteOverlayGrid() {
     spriteGrid.push([]);
     for (let x = 0; x < currentLevel[y].length; x++) {
       // insert any enemy type as an && currentLevel[y][x] !== (insert here)
-      if (player.yPosition !== y || player.xPosition !== x) {
-        spriteGrid[y].push("");
-      }
-      else {
+      if (player.yPosition === y && player.xPosition === x) {
         spriteGrid[y].push(PLAYER);
       }
-      for (let slimy of )
+      else {
+        spriteGrid[y].push("");
+      }
     }
   }
 }
