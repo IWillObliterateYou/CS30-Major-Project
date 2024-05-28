@@ -278,31 +278,34 @@ function titleScreen() {
   // a forest foreground
 }
 
-function checkIfLastTileWasADoor(levelDoors) {
-  // check if the previous tile was a door with another for loop
-  for (let [key, value] of levelDoors) {
-    if (value[0] === player.previousYPosition && value[1] === player.previousXPosition) {
-      lastTileWasADoor = true;
-      return;
-    }
-    else {
-      lastTileWasADoor = false;
-    }
-  }
-}
+// function checkIfLastTileWasADoor(levelDoors) {
+//   // check if the previous tile was a door with another for loop
+//   for (let [key, value] of levelDoors) {
+//     if (value[0] === player.previousYPosition && value[1] === player.previousXPosition) {
+//       lastTileWasADoor = true;
+//       return;
+//     }
+//     else {
+//       lastTileWasADoor = false;
+//     }
+//   }
+// }
 
 function shouldTileBeTreatedAsDoor(levelDoors) {
   // level doors is the initially the LVL_ONE_DOORS map
 
-  checkIfLastTileWasADoor(levelDoors);
+  //checkIfLastTileWasADoor(levelDoors);
 
   // importantly this does not check if this tile is a door, because if you enter a level through a passageway were more than one door are directly 
   // adjacent and you move into one of those, level shift should not be triggered
   for (let [key, value] of levelDoors) {
     if (player.yPosition === value[0] && player.xPosition === value[1] // checks if you're on a door
-      && lastTileWasADoor === false // checking if last tile on the current screen was a door
-      && dooredLastTurn === false) { // checking if the last turn was followed by a levelshift
-      levelShift(value[2], key);
+      //&& lastTileWasADoor === false // checking if last tile on the current screen was a door
+      ) { // checking if the last turn was followed by a levelshift
+        if(dooredLastTurn === false){
+          levelShift(value[2], key);
+        }
+      
       dooredLastTurn = true;
       return;
     }
