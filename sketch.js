@@ -20,7 +20,6 @@ let grass;
 let tileSize;
 let playerImage;
 let player;
-let slime;
 let pathway;
 let pathwayImage;
 let firstIteration = true; // checks that this level load is the very first on the game preforms
@@ -144,6 +143,9 @@ class slimeEnemy {
     this.dx = 1; // enemy movement distance per movement horizontally
     let directionOfTravel = startingDirection;
     this.movementCounter = 0;
+    this.health = 50;
+    this.attack = 10;
+    this.combatAI = "hyperAgressive";
   }
   movement() {
     if (this.movementCounter > this.movementCounter + 1000) {
@@ -160,43 +162,60 @@ class slimeEnemy {
     }
   }
   verticalShuffleAI() {
-    if (currentLevel[this.y - this.dy - 3][this.x].isPassible === true
-      && this.directionOfTravel === "up") {
+    // checking what direction to travel and if collision with the player is imminent
+    if (this.directionOfTravel === "up" && spriteGrid[this.y - 1] !== player) {
+      // going up
+      // checking if it's close enough to a wall to turn around
+      if (currentLevel[this.y - this.dy - 2][this.x].isPassible === true) {
 
-      this.move(0, -this.dy);
+        this.move(0, -this.dy);
+      }
+      else if (currentLevel[this.y - this.dy - 2][this.x].isPassible === false) {
+        this.directionOfTravel = "down";
+      }
     }
-    else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
-      && this.directionOfTravel === "up") {
-      this.directionOfTravel = "down";
-    }
-    else if (currentLevel[this.y + this.dy + 3][this.x].isPassible === true
-      && this.directionOfTravel === "down") {
+    else if (this.directionOfTravel === "down") {
+      // going down
+      if (currentLevel[this.y + this.dy + 2][this.x].isPassible === true) {
 
-      this.move(0, this.dy);
+        this.move(0, this.dy);
+      }
+      else if (currentLevel[this.y - this.dy - 2][this.x].isPassible === false) {
+        this.directionOfTravel = "up";
+      }
     }
-    else if (currentLevel[this.y - this.dy - 3][this.x].isPassible === false
-      && this.directionOfTravel === "down") {
-      this.directionOfTravel = "up";
-    }
+    else if (spriteGrid[this.y - 1 === player || this.y + 1 === player])
+      enterCombat(slimeEnemy);
   }
   horizontalShuffleAI() {
-    if (currentLevel[this.y][this.x - this.dx - 3].isPassible === true
-      && this.directionOfTravel === "left") {
+    // checking what direction to travel and if collision with the player is imminent
+    if (this.directionOfTravel === "left" && spriteGrid[this.y][this.x - 1] !== player) {
+      // going left
+      // checking if it's close enough to a wall to turn around
+      if (currentLevel[this.y][this.x - this.dx - 2].isPassible === true
+        && this.directionOfTravel === "left") {
 
-      this.move(-this.dx, 0);
+        this.move(-this.dx, 0);
+      }
+      else if (currentLevel[this.y][this.x - this.dx - 2].isPassible === false
+        && this.directionOfTravel === "left") {
+        this.directionOfTravel = "right";
+      }
     }
-    else if (currentLevel[this.y][this.x - this.dx - 3].isPassible === false
-      && this.directionOfTravel === "left") {
-      this.directionOfTravel = "right";
-    }
-    else if (currentLevel[this.y][this.x + this.dx + 3].isPassible === true
-      && this.directionOfTravel === "right") {
+    else if (this.directionOfTravel === "right") {
+      // going right
+      if (currentLevel[this.y][this.x + this.dx + 2].isPassible === true
+        && this.directionOfTravel === "right") {
 
-      this.move(this.dx, 0);
+        this.move(this.dx, 0);
+      }
+      else if (currentLevel[this.y][this.x + this.dx + 2].isPassible === false
+        && this.directionOfTravel === "right") {
+        this.directionOfTravel = "left";
+      }
     }
-    else if (currentLevel[this.y][this.x + this.dx + 3].isPassible === false
-      && this.directionOfTravel === "right") {
-      this.directionOfTravel = "left";
+    else if (spriteGrid[this.y][this.x - 1 === player || this.x + 1 === player]) {
+      enterCombat(slimeEnemy);
     }
   }
   circleAI() {
