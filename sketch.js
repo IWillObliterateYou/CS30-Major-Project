@@ -31,6 +31,9 @@ let lastTileWasADoor = false;
 let dooredLastTurn;
 let spriteGrid;
 let slimeImage;
+let gameState = "openWorld";
+let enemyHealth;
+let battleSlimeImage;
 
 // for the sprite grid
 const PLAYER = 5; // probably delete this
@@ -53,6 +56,7 @@ function preload() {
   playerImage = loadImage("assets/sprites/player.jpg");
   pathwayImage = loadImage("assets/tiles/pathway.jpg");
   slimeImage = loadImage("assets/sprites/slime.png");
+  battleSlimeImage = loadImage("assets/sprites/slimeBattle.png");
 }
 
 function setup() {
@@ -67,7 +71,7 @@ function setup() {
   tileSize = width / TILES_ON_SCREEN_HORIZONTALLY;
 
   givePropertiesToTiles();
-  givePropertiesToNPCsAndPlayer();
+  givePropertiesToPlayer();
 
   // sets the default level to levelOne
   currentLevel = levels.levelOne;
@@ -93,7 +97,7 @@ function givePropertiesToTiles() {
   };
 }
 
-function givePropertiesToNPCsAndPlayer() {
+function givePropertiesToPlayer() {
   player = {
     // plops the character dead center of the screen in the first level
     yPosition: Math.floor(levels.levelOne.length / 2),
@@ -101,13 +105,22 @@ function givePropertiesToNPCsAndPlayer() {
     texture: playerImage,
     previousXPosition: Math.floor(levels.levelOne.length / 2),
     previousYPosition: Math.floor(levels.levelOne[Math.floor(levels.levelOne.length / 2)].length / 2),
+    health: 100,
+    attack: 10
   };
 }
 
 function draw() {
-  drawCurrentLevel();
-  drawSpriteGrid();
-  drawTallerTiles();
+  if (gameState === "openWorld") {
+    drawCurrentLevel();
+    drawSpriteGrid();
+    drawTallerTiles();
+
+    slimeEnemy.movement();
+  }
+  else if (gameState === "combat") {
+    loadCombat(slimeEnemy);
+  }
 }
 
 // temporary maps of the doors in the sketch instead of JSON
@@ -146,6 +159,8 @@ class slimeEnemy {
     this.health = 50;
     this.attack = 10;
     this.combatAI = "hyperAgressive";
+    this.texture = slimeImage;
+    this.combatTexture = battleSlimeImage;
   }
   movement() {
     if (this.movementCounter > this.movementCounter + 1000) {
@@ -184,8 +199,9 @@ class slimeEnemy {
         this.directionOfTravel = "up";
       }
     }
-    else if (spriteGrid[this.y - 1 === player || this.y + 1 === player])
+    else if (spriteGrid[this.y - 1 === player || this.y + 1 === player]) {
       enterCombat(slimeEnemy);
+    }
   }
   horizontalShuffleAI() {
     // checking what direction to travel and if collision with the player is imminent
@@ -225,6 +241,21 @@ class slimeEnemy {
     spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
     spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
   }
+}
+
+// sets up all the stuff for combat that is called only once
+function enterCombat(enemyType) {
+  enemyHealth = enemyType.health;
+
+  gameState = "combat";
+}
+
+// runs combat after entering
+function loadCombat(enemy1, enemy2, enemy3, enemy4, enemy5) {
+  background(0, 220, 255);
+
+  // loading one enemy dead center
+  image(slimeEnemy.combatTexture, width / 2 - slimeEnemy.combatTexture.width / 2, height / 2 - slimeEnemy.combatTexture.height, slimeEnemy.combatTexture.width, slimeEnemy.combatTexture.height);
 }
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
@@ -291,7 +322,7 @@ function spawnEnemies() {
 
 function titleScreen() {
   // sky background
-  background("light blue");
+  background(0, 220, 255);
 
   // a mountain midground
   // a forest foreground
@@ -386,7 +417,7 @@ function drawSpriteGrid() {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
       if (spriteGrid[y][x] instanceof slimeEnemy) {
-        image(slimeImage, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+        image(slimeEnemy.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
     }
   }
