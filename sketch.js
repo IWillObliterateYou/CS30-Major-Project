@@ -34,6 +34,8 @@ let slimeImage;
 let gameState = "openWorld";
 let enemyHealth;
 let battleSlimeImage;
+let enemyAhead;
+let enemyType;
 
 // for the sprite grid
 const PLAYER = 5; // probably delete this
@@ -116,7 +118,11 @@ function draw() {
     drawSpriteGrid();
     drawTallerTiles();
 
-    slimeEnemy.movement();
+    for (let possibleEnemy in spriteGrid) {
+      if (possibleEnemy instanceof slimeEnemy) {
+        possibleEnemy.movement();
+      }
+    }
   }
   else if (gameState === "combat") {
     loadCombat(slimeEnemy);
@@ -417,7 +423,7 @@ function drawSpriteGrid() {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
       if (spriteGrid[y][x] instanceof slimeEnemy) {
-        image(slimeEnemy.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+        image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
     }
   }
@@ -452,20 +458,66 @@ function generateSpriteOverlayGrid() {
   }
 }
 
+
+
+
+
+
+
+
+
+
+//       \/ problem, is being called, continue running debugger
+
+
+
+
+
+
+
+
+
+
+function checkIfEnemyInTheWay(xMovement, yMovement) {
+  // checking every sprite tile loaded
+  for (let enemy of spriteGrid) {
+    // checking if an enemy exists in this location
+    if (enemy instanceof slimeEnemy) {
+      // checking if the player's intended location of travel will overlap with the enemy
+      enemyAhead = player.xPosition + xMovement === enemy.xPosition && player.yPosition + yMovement === enemy.yPosition;
+      enemyType = enemy;
+      // if ever there is an enemy, don't do any more checking
+      return;
+    }
+  }
+}
+
 function movePlayer(xMovement, yMovement) {
-  // old location
-  player.previousXPosition = player.xPosition;
-  player.previousYPosition = player.yPosition;
 
-  // reset old location to be empty
-  spriteGrid[player.previousYPosition][player.previousXPosition] = "";
+  checkIfEnemyInTheWay(xMovement, yMovement);
 
-  // move player in code
-  player.xPosition += xMovement;
-  player.yPosition += yMovement;
+  if (!enemyAhead) {
+    // only move if not running into enemy
 
-  // move player in drawing
-  spriteGrid[player.yPosition][player.xPosition] = player;
+    // old location
+    player.previousXPosition = player.xPosition;
+    player.previousYPosition = player.yPosition;
+
+    // reset old location to be empty
+    spriteGrid[player.previousYPosition][player.previousXPosition] = "";
+
+
+    // move player in code
+    player.xPosition += xMovement;
+    player.yPosition += yMovement;
+
+    // move player in drawing
+    spriteGrid[player.yPosition][player.xPosition] = player;
+  }
+  else {
+    console.log("success");
+    enterCombat(enemyType);
+  }
 
 
   shouldTileBeTreatedAsDoor(CurrentDoorSet);
