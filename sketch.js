@@ -36,6 +36,7 @@ let enemyHealth;
 let battleSlimeImage;
 let enemyAhead;
 let enemyType;
+let enemy;
 
 // for the sprite grid
 const PLAYER = 5; // probably delete this
@@ -250,18 +251,51 @@ class slimeEnemy {
 }
 
 // sets up all the stuff for combat that is called only once
-function enterCombat(enemyType) {
-  enemyHealth = enemyType.health;
+function enterCombat(enemy) {
+  enemyHealth = enemy.health;
 
   gameState = "combat";
 }
 
 // runs combat after entering
-function loadCombat(enemy1, enemy2, enemy3, enemy4, enemy5) {
+function loadCombat(enemy) {
   background(0, 220, 255);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// enemy combat texture is throwing undefined in debug
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // loading one enemy dead center
-  image(slimeEnemy.combatTexture, width / 2 - slimeEnemy.combatTexture.width / 2, height / 2 - slimeEnemy.combatTexture.height, slimeEnemy.combatTexture.width, slimeEnemy.combatTexture.height);
+  image(enemy.combatTexture, width / 2 - enemy.combatTexture.width / 2, height / 2 - enemy.combatTexture.height, enemy.combatTexture.width, enemy.combatTexture.height);
 }
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
@@ -458,55 +492,37 @@ function generateSpriteOverlayGrid() {
   }
 }
 
-
-
-
-
-
-
-
-
-
-//       \/ problem, is being called, continue running debugger
-
-
-
-
-
-
-
-
-
-
 function checkIfEnemyInTheWay(xMovement, yMovement) {
-  // checking every sprite tile loaded
-  for (let enemy of spriteGrid) {
-    // checking if an enemy exists in this location
-    if (enemy instanceof slimeEnemy) {
-      // checking if the player's intended location of travel will overlap with the enemy
-      enemyAhead = player.xPosition + xMovement === enemy.xPosition && player.yPosition + yMovement === enemy.yPosition;
-      enemyType = enemy;
-      // if ever there is an enemy, don't do any more checking
-      return;
-    }
+  // this only works if the absolute value of xMovement and yMovement never exceed 1
+
+  // checking below and above, right and left
+  if (spriteGrid[player.yPosition + yMovement] instanceof slimeEnemy) {
+    enemy = spriteGrid[player.yPosition + yMovement];
+    return true;
   }
+  else if (spriteGrid[player.yPosition][player.xPosition + xMovement] instanceof slimeEnemy) {
+    enemy = spriteGrid[player.yPosition][player.xPosition + xMovement];
+    return true;
+  }
+  return false;
 }
 
 function movePlayer(xMovement, yMovement) {
+  // always move regardless of if running into enemy
 
-  checkIfEnemyInTheWay(xMovement, yMovement);
+  // old location
+  player.previousXPosition = player.xPosition;
+  player.previousYPosition = player.yPosition;
 
-  if (!enemyAhead) {
-    // only move if not running into enemy
+  // reset old location to be empty
+  spriteGrid[player.previousYPosition][player.previousXPosition] = "";
 
-    // old location
-    player.previousXPosition = player.xPosition;
-    player.previousYPosition = player.yPosition;
-
-    // reset old location to be empty
-    spriteGrid[player.previousYPosition][player.previousXPosition] = "";
-
-
+  // if there is an enemy do not finish moving the player. The player will be erased until combat ends 
+  // while relevant variables (xMovemet, yMovement, player.xPosition, player.yPosition) are saved
+  if (checkIfEnemyInTheWay(xMovement, yMovement)) {
+    enterCombat(enemy);
+  }
+  else {
     // move player in code
     player.xPosition += xMovement;
     player.yPosition += yMovement;
@@ -514,12 +530,8 @@ function movePlayer(xMovement, yMovement) {
     // move player in drawing
     spriteGrid[player.yPosition][player.xPosition] = player;
   }
-  else {
-    console.log("success");
-    enterCombat(enemyType);
-  }
 
-
+  // checking for doors
   shouldTileBeTreatedAsDoor(CurrentDoorSet);
 }
 
