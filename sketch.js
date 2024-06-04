@@ -126,7 +126,7 @@ function draw() {
     }
   }
   else if (gameState === "combat") {
-    loadCombat(slimeEnemy);
+    loadCombat(enemy);
   }
 }
 
@@ -164,6 +164,7 @@ class slimeEnemy {
     let directionOfTravel = startingDirection;
     this.movementCounter = 0;
     this.health = 50;
+    this.maxHealth = 50;
     this.attack = 10;
     this.combatAI = "hyperAgressive";
     this.texture = slimeImage;
@@ -260,42 +261,43 @@ function enterCombat(enemy) {
 // runs combat after entering
 function loadCombat(enemy) {
   background(0, 220, 255);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// enemy combat texture is throwing undefined in debug
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // loading one enemy dead center
   image(enemy.combatTexture, width / 2 - enemy.combatTexture.width / 2, height / 2 - enemy.combatTexture.height, enemy.combatTexture.width, enemy.combatTexture.height);
+
+  // gui
+  // enemy healthbar
+  // adjusted health changes the health value of the enemy to fit the width of the enemy healthbar
+  let adjustedHealth = map(enemy.health, 0, enemy.maxHealth, 0, enemy.combatTexture.width + 40);
+
+  stroke("black");
+  // stroke weight is set because I need to adjust the locations of certain gui elements so they don't barely clip off-screen
+  strokeWeight(1);
+  fill("grey");
+  rect(width / 2 - enemy.combatTexture.width / 2 - 20, height / 2 - enemy.combatTexture.height - 50, enemy.combatTexture.width + 40, 20, 10);
+  fill("red");
+  rect(width / 2 - enemy.combatTexture.width / 2 - 20, height / 2 - enemy.combatTexture.height - 50, adjustedHealth, 20, 10);
+
+  // player 
+  // action box
+  fill(180, 180, 180, 150);
+  rect(20, height / 4 * 3 - 2, width / 5, height / 4, 5);
+  // stat box
+  rect(20 + width / 5, height / 4 * 3 - 2, width / 5 * 4 - 40, height / 4, 5);
+
+  fill(210, 210, 210, 150);
+  // if (colliding with the correct rectangle area) {
+  rect(30, height / 4 * 3 + 3, width / 5 - 20, (height / 4 - 6) / 4, 5); // a rectangle is placed underneath the words in the action box
+  // }
+
+  // actions in the action box
+  textAlign(CENTER, CENTER);
+  noStroke();
+  fill("black");
+  textSize((height / 4 - 6) / 4 - 5);
+  text("Attack", 30, height / 4 * 3 + 3, width / 5 - 20, (height / 4 - 6) / 4 + 2);
+  noStroke();
+
+
 }
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
