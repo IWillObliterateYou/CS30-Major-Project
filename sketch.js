@@ -37,6 +37,7 @@ let battleSlimeImage;
 let enemyAhead;
 let enemyType;
 let enemy;
+let attackButton;
 
 // for the sprite grid
 const PLAYER = 5; // probably delete this
@@ -127,6 +128,7 @@ function draw() {
   }
   else if (gameState === "combat") {
     loadCombat(enemy);
+    attackButton.draw();
   }
 }
 
@@ -261,6 +263,9 @@ function enterCombat(enemy) {
 // runs combat after entering
 function loadCombat(enemy) {
   background(0, 220, 255);
+
+  // mapping the enemy.combatTexture to adjust to varying window sizes
+
   // loading one enemy dead center
   image(enemy.combatTexture, width / 2 - enemy.combatTexture.width / 2, height / 2 - enemy.combatTexture.height, enemy.combatTexture.width, enemy.combatTexture.height);
 
@@ -279,26 +284,61 @@ function loadCombat(enemy) {
 
   // player 
   // action box
-  fill(180, 180, 180, 150);
+  fill(180, 150);
   rect(20, height / 4 * 3 - 2, width / 5, height / 4, 5);
   // stat box
   rect(20 + width / 5, height / 4 * 3 - 2, width / 5 * 4 - 40, height / 4, 5);
 
-  fill(210, 210, 210, 150);
-  // if (colliding with the correct rectangle area) {
-  rect(30, height / 4 * 3 + 3, width / 5 - 20, (height / 4 - 6) / 4, 5); // a rectangle is placed underneath the words in the action box
-  // }
+  let combatActionCollision = "none";
 
-  // actions in the action box
+  // action box word boxes
+  // if (combatActionCollision === "attack") { // if the colour of the boxes changed, reset it for the remaining boxes
+  //   fill(210, 150);
+  // }
+  // rect(30, height / 4 * 3 + 2, width / 5 - 20, (height / 4) / 4 - 2, 5);  // attack
+  // fill(180, 150);
+  // if (combatActionCollision === "placeholder1") {
+  //   fill(210, 150);
+  // }
+  // rect(30, height / 4 * 3 + 2 + ((height / 4) / 4) - 2, width / 5 - 20, (height / 4) / 4 - 2, 5); // placeholder 1
+  // fill(180, 150);
+  // if (combatActionCollision === "placeholder2") {
+  //   fill(210, 150);
+  // }
+  // rect(30, height / 4 * 3 + 2 + ((height / 4) / 4) * 2 - 4, width / 5 - 20, (height / 4) / 4 - 2, 5); // placeholder 2
+  // fill(180, 150);  
+  // if (combatActionCollision === "placeholder3") {
+  //   fill(210, 150);
+  // }
+  // rect(30, height / 4 * 3 + 2 + ((height / 4) / 4) * 3 - 6, width / 5 - 20, (height / 4) / 4 - 2, 5); // placeholder 3
+
+  makeTheCombatButtonsWork();
+  attackButton.draw();
+
+  // words in the action box
   textAlign(CENTER, CENTER);
   noStroke();
   fill("black");
   textSize((height / 4 - 6) / 4 - 5);
-  text("Attack", 30, height / 4 * 3 + 3, width / 5 - 20, (height / 4 - 6) / 4 + 2);
+  // text("Attack", 30, height / 4 * 3 + 2, width / 5 - 20, (height / 4) / 4 - 2);
+  // text("Placeholder", 30, height / 4 * 3 + 2 + ((height / 4) / 4) - 2, width / 5 - 20, (height / 4) / 4 - 2, 5);
+  // text("Placeholder", 30, height / 4 * 3 + 2 + ((height / 4) / 4) * 2 - 4, width / 5 - 20, (height / 4) / 4 - 2, 5);
+  // text("Placeholder", 30, height / 4 * 3 + 2 + ((height / 4) / 4) * 3 - 6, width / 5 - 20, (height / 4) / 4 - 2, 5);
   noStroke();
-
-
 }
+
+function makeTheCombatButtonsWork() {
+  attackButton = new Clickable();
+  attackButton.locate(30, height / 4 * 3 + 2);
+  attackButton.resize(width / 5 - 20, (height / 4) / 4 - 2);
+  attackButton.color = "#69aaaaaa";
+  attackButton.cornerRadius = 5;       //Corner radius of the clickable (float)
+  attackButton.strokeWeight = 1;        //Stroke width of the clickable (float)
+  attackButton.onHover = function() {
+    attackButton.color = "#aaffffff";
+  };
+}
+
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
 // the scheme is: each array within the property is one two-way door (because you can backtrack)
