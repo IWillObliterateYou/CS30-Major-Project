@@ -38,6 +38,11 @@ let enemyAhead;
 let enemyType;
 let enemy;
 let attackButton;
+let placeholderButton1;
+let placeholderButton2;
+let placeholderButton3;
+let combatTurn = "player";
+let turnTimer;
 
 // for the sprite grid
 const PLAYER = 5; // probably delete this
@@ -110,7 +115,8 @@ function givePropertiesToPlayer() {
     previousXPosition: Math.floor(levels.levelOne.length / 2),
     previousYPosition: Math.floor(levels.levelOne[Math.floor(levels.levelOne.length / 2)].length / 2),
     health: 100,
-    attack: 10
+    maxHealth: 100,
+    attack: 30
   };
 }
 
@@ -165,10 +171,10 @@ class slimeEnemy {
     this.dx = 1; // enemy movement distance per movement horizontally
     let directionOfTravel = startingDirection;
     this.movementCounter = 0;
-    this.health = 50;
+    this.currentHealth = 50;
     this.maxHealth = 50;
     this.attack = 10;
-    this.combatAI = "hyperAgressive";
+    this.combatAI = "hyperAggressive";
     this.texture = slimeImage;
     this.combatTexture = battleSlimeImage;
   }
@@ -255,8 +261,11 @@ class slimeEnemy {
 
 // sets up all the stuff for combat that is called only once
 function enterCombat(enemy) {
-  enemyHealth = enemy.health;
+  enemyHealth = enemy.currentHealth;
+  turnTimer = 0;
 
+  makeTheCombatButtonsWork(enemy);
+  
   gameState = "combat";
 }
 
@@ -272,7 +281,7 @@ function loadCombat(enemy) {
   // gui
   // enemy healthbar
   // adjusted health changes the health value of the enemy to fit the width of the enemy healthbar
-  let adjustedHealth = map(enemy.health, 0, enemy.maxHealth, 0, enemy.combatTexture.width + 40);
+  let adjustedHealth = map(enemy.currentHealth, 0, enemy.maxHealth, 0, enemy.combatTexture.width + 40);
 
   stroke("black");
   // stroke weight is set because I need to adjust the locations of certain gui elements so they don't barely clip off-screen
@@ -288,57 +297,92 @@ function loadCombat(enemy) {
   rect(20, height / 4 * 3 - 2, width / 5, height / 4, 5);
   // stat box
   rect(20 + width / 5, height / 4 * 3 - 2, width / 5 * 4 - 40, height / 4, 5);
+  // health
+  let adjustedPlayerHealth = map(player.health, 0, player.maxHealth, 0, width / 5);
+  fill("grey");
+  rect(width / 5 + width / 22, height / 4 * 3 + 5, width / 5, height / 20);
+  fill("red");
+  rect(width / 5 + width / 22, height / 4 * 3 + 5, adjustedPlayerHealth, height / 20);
 
-  let combatActionCollision = "none";
-
-  // action box word boxes
-  // if (combatActionCollision === "attack") { // if the colour of the boxes changed, reset it for the remaining boxes
-  //   fill(210, 150);
-  // }
-  // rect(30, height / 4 * 3 + 2, width / 5 - 20, (height / 4) / 4 - 2, 5);  // attack
-  // fill(180, 150);
-  // if (combatActionCollision === "placeholder1") {
-  //   fill(210, 150);
-  // }
-  // rect(30, height / 4 * 3 + 2 + ((height / 4) / 4) - 2, width / 5 - 20, (height / 4) / 4 - 2, 5); // placeholder 1
-  // fill(180, 150);
-  // if (combatActionCollision === "placeholder2") {
-  //   fill(210, 150);
-  // }
-  // rect(30, height / 4 * 3 + 2 + ((height / 4) / 4) * 2 - 4, width / 5 - 20, (height / 4) / 4 - 2, 5); // placeholder 2
-  // fill(180, 150);  
-  // if (combatActionCollision === "placeholder3") {
-  //   fill(210, 150);
-  // }
-  // rect(30, height / 4 * 3 + 2 + ((height / 4) / 4) * 3 - 6, width / 5 - 20, (height / 4) / 4 - 2, 5); // placeholder 3
-
-  makeTheCombatButtonsWork();
   attackButton.draw();
+  placeholderButton1.draw();
+  placeholderButton2.draw();
+  placeholderButton3.draw();
 
-  // words in the action box
-  textAlign(CENTER, CENTER);
-  noStroke();
-  fill("black");
-  textSize((height / 4 - 6) / 4 - 5);
-  // text("Attack", 30, height / 4 * 3 + 2, width / 5 - 20, (height / 4) / 4 - 2);
-  // text("Placeholder", 30, height / 4 * 3 + 2 + ((height / 4) / 4) - 2, width / 5 - 20, (height / 4) / 4 - 2, 5);
-  // text("Placeholder", 30, height / 4 * 3 + 2 + ((height / 4) / 4) * 2 - 4, width / 5 - 20, (height / 4) / 4 - 2, 5);
-  // text("Placeholder", 30, height / 4 * 3 + 2 + ((height / 4) / 4) * 3 - 6, width / 5 - 20, (height / 4) / 4 - 2, 5);
-  noStroke();
+  // these if statements are kept seperate for the sake of new ai types
+  if (millis() >= turnTimer + 500 && combatTurn === "enemy") {
+    if (enemy.combatAI === "hyperAggressive") {
+      player.health -= enemy.attack;
+      turnTimer = millis();
+      combatTurn = "player";
+    }
+  }
 }
 
-function makeTheCombatButtonsWork() {
+function makeTheCombatButtonsWork(enemy) {
   attackButton = new Clickable();
   attackButton.locate(30, height / 4 * 3 + 2);
   attackButton.resize(width / 5 - 20, (height / 4) / 4 - 2);
-  attackButton.color = "#69aaaaaa";
+  attackButton.textSize = (height / 4) / 4 - 2;
+  attackButton.text = "Attack";
   attackButton.cornerRadius = 5;       //Corner radius of the clickable (float)
   attackButton.strokeWeight = 1;        //Stroke width of the clickable (float)
   attackButton.onHover = function() {
-    attackButton.color = "#aaffffff";
+    attackButton.color = "#eedddddd";
+  };
+  attackButton.onOutside = function() {
+    attackButton.color = "#69dddddd";
+  };
+  attackButton.onRelease = function() {
+    if (millis() >= turnTimer + 500 && combatTurn === "player") {
+      turnTimer = millis();
+      enemy.currentHealth -= player.attack;
+      combatTurn = "enemy";
+    }
+  };
+
+  placeholderButton1 = new Clickable();
+  placeholderButton1.locate(30, height / 4 * 3 + 2 + ((height / 4) / 4) - 2);
+  placeholderButton1.resize(width / 5 - 20, (height / 4) / 4 - 2);
+  placeholderButton1.textSize = (height / 4) / 4 - 2;
+  placeholderButton1.text = "Placeholder";
+  placeholderButton1.cornerRadius = 5;       //Corner radius of the clickable (float)
+  placeholderButton1.strokeWeight = 1;        //Stroke width of the clickable (float)
+  placeholderButton1.onHover = function() {
+    placeholderButton1.color = "#eedddddd";
+  };
+  placeholderButton1.onOutside = function() {
+    placeholderButton1.color = "#69dddddd";
+  };
+
+  placeholderButton2 = new Clickable();
+  placeholderButton2.locate(30, height / 4 * 3 + 2 + ((height / 4) / 4) * 2 - 4);
+  placeholderButton2.resize(width / 5 - 20, (height / 4) / 4 - 2);
+  placeholderButton2.textSize = (height / 4) / 4 - 2;
+  placeholderButton2.text = "Placeholder";
+  placeholderButton2.cornerRadius = 5;       //Corner radius of the clickable (float)
+  placeholderButton2.strokeWeight = 1;        //Stroke width of the clickable (float)
+  placeholderButton2.onHover = function() {
+    placeholderButton2.color = "#eedddddd";
+  };
+  placeholderButton2.onOutside = function() {
+    placeholderButton2.color = "#69dddddd";
+  };
+
+  placeholderButton3 = new Clickable();
+  placeholderButton3.locate(30, height / 4 * 3 + 2 + ((height / 4) / 4) * 3 - 6);
+  placeholderButton3.resize(width / 5 - 20, (height / 4) / 4 - 2);
+  placeholderButton3.textSize = (height / 4) / 4 - 2;
+  placeholderButton3.text = "Placeholder";
+  placeholderButton3.cornerRadius = 5;       //Corner radius of the clickable (float)
+  placeholderButton3.strokeWeight = 1;        //Stroke width of the clickable (float)
+  placeholderButton3.onHover = function() {
+    placeholderButton3.color = "#eedddddd";
+  };
+  placeholderButton3.onOutside = function() {
+    placeholderButton3.color = "#69dddddd";
   };
 }
-
 
 // uses the doors.json, each level has an entries and exits sister property with the same name in the doors json instead
 // the scheme is: each array within the property is one two-way door (because you can backtrack)

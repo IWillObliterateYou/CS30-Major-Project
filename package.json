@@ -21,7 +21,8 @@
       "no-unused-vars": "off"
     },
     "globals": {
-
+      "Clickable": true,
+      
       "width": true,
       "height": true,
       "drawingContext": true,
