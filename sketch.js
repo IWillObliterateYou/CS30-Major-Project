@@ -43,6 +43,9 @@ let placeholderButton2;
 let placeholderButton3;
 let combatTurn = "player";
 let turnTimer;
+let yMovementForCombat;
+let xMovementForCombat;
+let ignoringEnemy = false;
 
 // for the sprite grid
 const PLAYER = 5; // probably delete this
@@ -135,6 +138,12 @@ function draw() {
   else if (gameState === "combat") {
     loadCombat(enemy);
     attackButton.draw();
+  }
+  else if (gameState === "failure") {
+    background(0);
+    textAlign(CENTER, CENTER);
+    textSize(100);
+    text("You Died", width / 2, height / 2);
   }
 }
 
@@ -265,7 +274,7 @@ function enterCombat(enemy) {
   turnTimer = 0;
 
   makeTheCombatButtonsWork(enemy);
-  
+
   gameState = "combat";
 }
 
@@ -317,6 +326,29 @@ function loadCombat(enemy) {
       combatTurn = "player";
     }
   }
+
+  if (enemy.currentHealth <= 0) {
+    endCombatVictory();
+
+    spriteGrid[player.yPosition][player.xPosition] = player;
+  }
+  else if (player.health <= 0) {
+    endCombatFailure();
+  }
+}
+
+function endCombatVictory() {
+  gameState = "openWorld";
+
+  combatTurn = "player"
+
+  ignoringEnemy = true;
+  movePlayer(xMovementForCombat, yMovementForCombat);
+  ignoringEnemy = false;
+}
+
+function endCombatFailure() {
+  gameState = "failure";
 }
 
 function makeTheCombatButtonsWork(enemy) {
@@ -327,13 +359,13 @@ function makeTheCombatButtonsWork(enemy) {
   attackButton.text = "Attack";
   attackButton.cornerRadius = 5;       //Corner radius of the clickable (float)
   attackButton.strokeWeight = 1;        //Stroke width of the clickable (float)
-  attackButton.onHover = function() {
+  attackButton.onHover = function () {
     attackButton.color = "#eedddddd";
   };
-  attackButton.onOutside = function() {
+  attackButton.onOutside = function () {
     attackButton.color = "#69dddddd";
   };
-  attackButton.onRelease = function() {
+  attackButton.onRelease = function () {
     if (millis() >= turnTimer + 500 && combatTurn === "player") {
       turnTimer = millis();
       enemy.currentHealth -= player.attack;
@@ -348,10 +380,10 @@ function makeTheCombatButtonsWork(enemy) {
   placeholderButton1.text = "Placeholder";
   placeholderButton1.cornerRadius = 5;       //Corner radius of the clickable (float)
   placeholderButton1.strokeWeight = 1;        //Stroke width of the clickable (float)
-  placeholderButton1.onHover = function() {
+  placeholderButton1.onHover = function () {
     placeholderButton1.color = "#eedddddd";
   };
-  placeholderButton1.onOutside = function() {
+  placeholderButton1.onOutside = function () {
     placeholderButton1.color = "#69dddddd";
   };
 
@@ -362,10 +394,10 @@ function makeTheCombatButtonsWork(enemy) {
   placeholderButton2.text = "Placeholder";
   placeholderButton2.cornerRadius = 5;       //Corner radius of the clickable (float)
   placeholderButton2.strokeWeight = 1;        //Stroke width of the clickable (float)
-  placeholderButton2.onHover = function() {
+  placeholderButton2.onHover = function () {
     placeholderButton2.color = "#eedddddd";
   };
-  placeholderButton2.onOutside = function() {
+  placeholderButton2.onOutside = function () {
     placeholderButton2.color = "#69dddddd";
   };
 
@@ -376,10 +408,10 @@ function makeTheCombatButtonsWork(enemy) {
   placeholderButton3.text = "Placeholder";
   placeholderButton3.cornerRadius = 5;       //Corner radius of the clickable (float)
   placeholderButton3.strokeWeight = 1;        //Stroke width of the clickable (float)
-  placeholderButton3.onHover = function() {
+  placeholderButton3.onHover = function () {
     placeholderButton3.color = "#eedddddd";
   };
-  placeholderButton3.onOutside = function() {
+  placeholderButton3.onOutside = function () {
     placeholderButton3.color = "#69dddddd";
   };
 }
@@ -582,8 +614,8 @@ function checkIfEnemyInTheWay(xMovement, yMovement) {
   // this only works if the absolute value of xMovement and yMovement never exceed 1
 
   // checking below and above, right and left
-  if (spriteGrid[player.yPosition + yMovement] instanceof slimeEnemy) {
-    enemy = spriteGrid[player.yPosition + yMovement];
+  if (spriteGrid[player.yPosition + yMovement][player.xPosition] instanceof slimeEnemy) {
+    enemy = spriteGrid[player.yPosition + yMovement][player.xPosition];
     return true;
   }
   else if (spriteGrid[player.yPosition][player.xPosition + xMovement] instanceof slimeEnemy) {
@@ -604,8 +636,8 @@ function movePlayer(xMovement, yMovement) {
   spriteGrid[player.previousYPosition][player.previousXPosition] = "";
 
   // if there is an enemy do not finish moving the player. The player will be erased until combat ends 
-  // while relevant variables (xMovemet, yMovement, player.xPosition, player.yPosition) are saved
-  if (checkIfEnemyInTheWay(xMovement, yMovement)) {
+  // while relevant variables (xMovement, yMovement, player.xPosition, player.yPosition) are saved
+  if (checkIfEnemyInTheWay(xMovement, yMovement) && !ignoringEnemy) {
     enterCombat(enemy);
   }
   else {
@@ -619,6 +651,9 @@ function movePlayer(xMovement, yMovement) {
 
   // checking for doors
   shouldTileBeTreatedAsDoor(CurrentDoorSet);
+
+  yMovementForCombat = yMovement;
+  xMovementForCombat = xMovement;
 }
 
 function keyPressed() {
@@ -632,112 +667,115 @@ function keyPressed() {
   // vertical movement 
   // to be clear: the cross line is the exact line at which the movement switches from a screen scroll to non-centered movement
 
-  // behind cross line 
-  if (player.yPosition < Math.floor(TILES_ON_SCREEN_VERTICALLY / 2) || player.yPosition > currentLevel.length - Math.floor(TILES_ON_SCREEN_VERTICALLY / 2 + 1)) {
-    if (key === "w"
-      // thanks to needing to check for solid tiles here, I cannot move the check for running off the map into the movePlayer function
-      && player.yPosition - 1 >= 0 // checking if you are running off the map
-      && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) { // checks if the block you're trying to enter is passible, needs to be checked last so as not to be checking the state of undefined
-      movePlayer(0, -1);
+  // only move if in the open world
+  if (gameState === "openWorld") {
+    // behind cross line 
+    if (player.yPosition < Math.floor(TILES_ON_SCREEN_VERTICALLY / 2) || player.yPosition > currentLevel.length - Math.floor(TILES_ON_SCREEN_VERTICALLY / 2 + 1)) {
+      if (key === "w"
+        // thanks to needing to check for solid tiles here, I cannot move the check for running off the map into the movePlayer function
+        && player.yPosition - 1 >= 0 // checking if you are running off the map
+        && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) { // checks if the block you're trying to enter is passible, needs to be checked last so as not to be checking the state of undefined
+        movePlayer(0, -1);
+      }
+      else if (key === "s"
+        && player.yPosition + 1 <= currentLevel.length - 1 // checking if you are running off the map
+        && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
+        movePlayer(0, 1);
+      }
     }
-    else if (key === "s"
-      && player.yPosition + 1 <= currentLevel.length - 1 // checking if you are running off the map
-      && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
-      movePlayer(0, 1);
-    }
-  }
 
-  // on cross line
-  // at top
-  else if (player.yPosition === Math.floor(TILES_ON_SCREEN_VERTICALLY / 2)) {
+    // on cross line
+    // at top
+    else if (player.yPosition === Math.floor(TILES_ON_SCREEN_VERTICALLY / 2)) {
 
 
-    if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
-      movePlayer(0, -1);
+      if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
+        movePlayer(0, -1);
+      }
+      // extra check added to see if the level is the size of the level, which would cause screen to scroll when it shouldn't
+      else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true && currentLevel.length === TILES_ON_SCREEN_VERTICALLY) {
+        movePlayer(0, 1);
+      }
+      else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
+        movementOfScreenY -= 1;
+        movePlayer(0, 1);
+      }
     }
-    // extra check added to see if the level is the size of the level, which would cause screen to scroll when it shouldn't
-    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true && currentLevel.length === TILES_ON_SCREEN_VERTICALLY) {
-      movePlayer(0, 1);
+    // at bottom
+    else if (player.yPosition === currentLevel.length - Math.floor(TILES_ON_SCREEN_VERTICALLY / 2 + 1)) {
+      if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
+        movementOfScreenY += 1;
+        movePlayer(0, -1);
+      }
+      else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
+        movePlayer(0, 1);
+      }
     }
-    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
-      movementOfScreenY -= 1;
-      movePlayer(0, 1);
-    }
-  }
-  // at bottom
-  else if (player.yPosition === currentLevel.length - Math.floor(TILES_ON_SCREEN_VERTICALLY / 2 + 1)) {
-    if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
-      movementOfScreenY += 1;
-      movePlayer(0, -1);
-    }
-    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
-      movePlayer(0, 1);
-    }
-  }
 
-  // before cross line
-  else if (player.yPosition > 5 || player.yPosition < currentLevel.length - Math.floor(TILES_ON_SCREEN_VERTICALLY / 2 + 1)) {
-    if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
-      movementOfScreenY += 1;
-      movePlayer(0, -1);
+    // before cross line
+    else if (player.yPosition > 5 || player.yPosition < currentLevel.length - Math.floor(TILES_ON_SCREEN_VERTICALLY / 2 + 1)) {
+      if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
+        movementOfScreenY += 1;
+        movePlayer(0, -1);
+      }
+      else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
+        movementOfScreenY -= 1;
+        movePlayer(0, 1);
+      }
     }
-    else if (key === "s" && currentLevel[player.yPosition + 1][player.xPosition].isPassible === true) {
-      movementOfScreenY -= 1;
-      movePlayer(0, 1);
-    }
-  }
 
-  // horizontal movement
+    // horizontal movement
 
-  // behind cross line 
-  if (player.xPosition < Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2) || player.xPosition > currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
-    if (key === "a"
-      && player.xPosition - 1 >= 0 // checking if you are running off the map
-      && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) { // are you trying to enter a nonsolid tile to your left
-      movePlayer(-1, 0);
+    // behind cross line 
+    if (player.xPosition < Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2) || player.xPosition > currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
+      if (key === "a"
+        && player.xPosition - 1 >= 0 // checking if you are running off the map
+        && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) { // are you trying to enter a nonsolid tile to your left
+        movePlayer(-1, 0);
+      }
+      else if (key === "d"
+        && player.xPosition + 1 <= currentLevel[player.yPosition].length - 1 // checking if you are running off the map
+        && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) { // are you trying to enter a nonsolid tile to your right
+        movePlayer(1, 0);
+      }
     }
-    else if (key === "d"
-      && player.xPosition + 1 <= currentLevel[player.yPosition].length - 1 // checking if you are running off the map
-      && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) { // are you trying to enter a nonsolid tile to your right
-      movePlayer(1, 0);
-    }
-  }
 
-  // on cross line
-  // at left
-  else if (player.xPosition === Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2)) {
-    if (key === "a" && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) {
-      movePlayer(-1, 0);
+    // on cross line
+    // at left
+    else if (player.xPosition === Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2)) {
+      if (key === "a" && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) {
+        movePlayer(-1, 0);
+      }
+      // extra check added to see if the level is the size of the level, which would cause screen to scroll when it shouldn't
+      else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true && player.xPosition !== currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
+        movementOfScreenX -= 1;
+        movePlayer(1, 0);
+      }
+      else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) {
+        movePlayer(1, 0);
+      }
     }
-    // extra check added to see if the level is the size of the level, which would cause screen to scroll when it shouldn't
-    else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true && player.xPosition !== currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
-      movementOfScreenX -= 1;
-      movePlayer(1, 0);
+    // at right
+    else if (player.xPosition === currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
+      if (key === "a" && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) {
+        movementOfScreenX += 1;
+        movePlayer(-1, 0);
+      }
+      else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) {
+        movePlayer(1, 0);
+      }
     }
-    else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) {
-      movePlayer(1, 0);
-    }
-  }
-  // at right
-  else if (player.xPosition === currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
-    if (key === "a" && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) {
-      movementOfScreenX += 1;
-      movePlayer(-1, 0);
-    }
-    else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) {
-      movePlayer(1, 0);
-    }
-  }
 
-  // before cross line
-  else if (player.xPosition > Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2) || player.xPosition > currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
-    if (key === "a" && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) {
-      movementOfScreenX += 1;
-      movePlayer(-1, 0);
-    }
-    else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) {
-      movementOfScreenX -= 1;
-      movePlayer(1, 0);
+    // before cross line
+    else if (player.xPosition > Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2) || player.xPosition > currentLevel[player.yPosition].length - Math.floor(TILES_ON_SCREEN_HORIZONTALLY / 2 + 1)) {
+      if (key === "a" && currentLevel[player.yPosition][player.xPosition - 1].isPassible === true) {
+        movementOfScreenX += 1;
+        movePlayer(-1, 0);
+      }
+      else if (key === "d" && currentLevel[player.yPosition][player.xPosition + 1].isPassible === true) {
+        movementOfScreenX -= 1;
+        movePlayer(1, 0);
+      }
     }
   }
 }
