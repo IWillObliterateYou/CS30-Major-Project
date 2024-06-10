@@ -48,8 +48,8 @@ let xMovementForCombat;
 let ignoringEnemy = false;
 
 // for the sprite grid
-const PLAYER = 5; // probably delete this
 const SLIME = 4;
+const PLAYER = 5;
 
 // for use in the level arrays; defines what numbers correspond to which objects
 const GRASS = 0;
@@ -72,7 +72,7 @@ function preload() {
 }
 
 function setup() {
-  // make the biggest 20/11 tile display you can
+  // make the biggest tile display you can with the tiles on screen vertically and horizontally
   if (windowHeight < windowWidth / TILES_ON_SCREEN_HORIZONTALLY * TILES_ON_SCREEN_VERTICALLY) {
     createCanvas(windowHeight / TILES_ON_SCREEN_VERTICALLY * TILES_ON_SCREEN_HORIZONTALLY, windowHeight); // if the window height is smaller than the width would allow
   }
@@ -178,7 +178,7 @@ class slimeEnemy {
     this.ai = aiType;
     this.dy = 1; // enemy movement distance per movement vertically
     this.dx = 1; // enemy movement distance per movement horizontally
-    let directionOfTravel = startingDirection;
+    this.directionOfTravel = startingDirection;
     this.movementCounter = 0;
     this.currentHealth = 50;
     this.maxHealth = 50;
@@ -188,7 +188,7 @@ class slimeEnemy {
     this.combatTexture = battleSlimeImage;
   }
   movement() {
-    if (this.movementCounter > this.movementCounter + 1000) {
+    if (millis() > this.movementCounter + 1000) {
       this.aiActivate();
       this.movementCounter = millis();
     }
@@ -203,28 +203,28 @@ class slimeEnemy {
   }
   verticalShuffleAI() {
     // checking what direction to travel and if collision with the player is imminent
-    if (this.directionOfTravel === "up" && spriteGrid[this.y - 1] !== player) {
+    if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - 1][this.xPosition] !== player) {
       // going up
       // checking if it's close enough to a wall to turn around
-      if (currentLevel[this.y - this.dy - 2][this.x].isPassible === true) {
+      if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible === true) {
 
         this.move(0, -this.dy);
       }
-      else if (currentLevel[this.y - this.dy - 2][this.x].isPassible === false) {
+      else if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible === false) {
         this.directionOfTravel = "down";
       }
     }
     else if (this.directionOfTravel === "down") {
       // going down
-      if (currentLevel[this.y + this.dy + 2][this.x].isPassible === true) {
+      if (currentLevel[this.yPosition + this.dy + 2][this.xPosition].isPassible === true) {
 
         this.move(0, this.dy);
       }
-      else if (currentLevel[this.y - this.dy - 2][this.x].isPassible === false) {
+      else if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible === false) {
         this.directionOfTravel = "up";
       }
     }
-    else if (spriteGrid[this.y - 1 === player || this.y + 1 === player]) {
+    else if (spriteGrid[this.yPosition - 1][this.xPosition] === player || spriteGrid[this.yPosition + 1][this.xPosition] === player) {
       enterCombat(slimeEnemy);
     }
   }
@@ -263,8 +263,48 @@ class slimeEnemy {
     // currently unused
   }
   move(dx, dy) {
-    spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
-    spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// getting started on working
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    spriteGrid[this.yPosition + this.dy][this.xPosition + this.dx] = this;
+    this.yPosition += this.dy;
+    this.xPosition += this.dx;
+    spriteGrid[this.yPosition - this.dy][this.xPosition - this.dx] = "";
   }
 }
 
@@ -461,19 +501,31 @@ function levelShift(levelCode, doorCode) {
 
   // setting the exit set to now be the current set and removing the exit set
   CurrentDoorSet = ExitDoorSet;
-  ExitDoorSet = "";
 
   // only one door can (and should) activate at once, so just end the function here
   return;
 }
 
+// [ypos, xpos, enemytype, level]
+let enemyLocations = [[12, 12, slimeEnemy, "l1"], [12, 18, slimeEnemy, "l1"], [18, 12, slimeEnemy, "l1"], [18, 18, slimeEnemy, "l1"],
+  [5, 7, slimeEnemy, "l2"], [5, 12, slimeEnemy, "l2"],
+  [19, 19, slimeEnemy, "l3"], [18, 19, slimeEnemy, "l3"], [20, 19, slimeEnemy, "l3"], [19, 18, slimeEnemy, "l3"], [19, 20, slimeEnemy, "l3"]];
+
 function spawnEnemies() {
-  for (let y = 0; y < spriteGrid.length; y++) {
-    for (let x = 0; x < spriteGrid[y].length; x++) {
-      if (currentLevel[y][x] === 4) {
-        spriteGrid[y][x] = new slimeEnemy(x, y, "vertical", "up");
-        currentLevel[y][x] = GRASS;
-      }
+  for (let enemy of enemyLocations) {
+    // levels.levelOne does not exist before initialization, so it cannot go in enemyLocations
+    if (enemy[3] === "l1") {
+      enemy[3] = levels.levelOne;
+    }
+    else if (enemy[3] === "l2") {
+      enemy[3] = levels.levelTwo;
+    }
+    else if (enemy[3] === "l3") {
+      enemy[3] = levels.levelThree;
+    }
+
+    if (enemy[3] === currentLevel) {
+      spriteGrid[enemy[0]][enemy[1]] = new enemy[2](enemy[1], enemy[0], "vertical", "up");
     }
   }
 }
