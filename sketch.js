@@ -46,6 +46,8 @@ let turnTimer;
 let yMovementForCombat;
 let xMovementForCombat;
 let ignoringEnemy = false;
+let enemyMovementTimer = 0;
+let didEnemyTriggerCombat;
 
 // for the sprite grid
 const SLIME = 4;
@@ -129,9 +131,13 @@ function draw() {
     drawSpriteGrid();
     drawTallerTiles();
 
-    for (let possibleEnemy in spriteGrid) {
-      if (possibleEnemy instanceof slimeEnemy) {
-        possibleEnemy.movement();
+    if (millis() >= enemyMovementTimer + 1000) {
+      for (let row of spriteGrid) {
+        for (let possibleEnemy of row) {
+          if (possibleEnemy instanceof slimeEnemy) {
+            possibleEnemy.movement();
+          }
+        }
       }
     }
   }
@@ -188,7 +194,7 @@ class slimeEnemy {
     this.combatTexture = battleSlimeImage;
   }
   movement() {
-    if (millis() > this.movementCounter + 1000) {
+    if (millis() > this.movementCounter + 1000 && gameState === "openWorld") {
       this.aiActivate();
       this.movementCounter = millis();
     }
@@ -224,8 +230,11 @@ class slimeEnemy {
         this.directionOfTravel = "up";
       }
     }
-    else if (spriteGrid[this.yPosition - 1][this.xPosition] === player || spriteGrid[this.yPosition + 1][this.xPosition] === player) {
-      enterCombat(slimeEnemy);
+    else if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - 1][this.xPosition] === player || // if the player is above and going up
+      this.directionOfTravel === "down" && spriteGrid[this.yPosition + 1][this.xPosition] === player) { // if the player is below and going down
+      enemy = this;
+      didEnemyTriggerCombat = true;
+      enterCombat(enemy);
     }
   }
   horizontalShuffleAI() {
@@ -256,55 +265,17 @@ class slimeEnemy {
       }
     }
     else if (spriteGrid[this.y][this.x - 1 === player || this.x + 1 === player]) {
-      enterCombat(slimeEnemy);
+      enterCombat(spriteGrid[this.yPosition][this.xPosition]);
     }
   }
   circleAI() {
     // currently unused
   }
   move(dx, dy) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// getting started on working
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    spriteGrid[this.yPosition + this.dy][this.xPosition + this.dx] = this;
-    this.yPosition += this.dy;
-    this.xPosition += this.dx;
-    spriteGrid[this.yPosition - this.dy][this.xPosition - this.dx] = "";
+    spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
+    this.yPosition += dy;
+    this.xPosition += dx;
+    spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
   }
 }
 
@@ -380,11 +351,14 @@ function loadCombat(enemy) {
 function endCombatVictory() {
   gameState = "openWorld";
 
-  combatTurn = "player"
+  combatTurn = "player";
 
-  ignoringEnemy = true;
-  movePlayer(xMovementForCombat, yMovementForCombat);
-  ignoringEnemy = false;
+  if (!didEnemyTriggerCombat) {
+    ignoringEnemy = true;
+    movePlayer(xMovementForCombat, yMovementForCombat);
+    ignoringEnemy = false;
+  }
+  didEnemyTriggerCombat = false; // the default
 }
 
 function endCombatFailure() {
@@ -508,8 +482,8 @@ function levelShift(levelCode, doorCode) {
 
 // [ypos, xpos, enemytype, level]
 let enemyLocations = [[12, 12, slimeEnemy, "l1"], [12, 18, slimeEnemy, "l1"], [18, 12, slimeEnemy, "l1"], [18, 18, slimeEnemy, "l1"],
-  [5, 7, slimeEnemy, "l2"], [5, 12, slimeEnemy, "l2"],
-  [19, 19, slimeEnemy, "l3"], [18, 19, slimeEnemy, "l3"], [20, 19, slimeEnemy, "l3"], [19, 18, slimeEnemy, "l3"], [19, 20, slimeEnemy, "l3"]];
+[5, 7, slimeEnemy, "l2"], [5, 12, slimeEnemy, "l2"],
+[19, 19, slimeEnemy, "l3"], [18, 19, slimeEnemy, "l3"], [20, 19, slimeEnemy, "l3"], [19, 18, slimeEnemy, "l3"], [19, 20, slimeEnemy, "l3"]];
 
 function spawnEnemies() {
   for (let enemy of enemyLocations) {
