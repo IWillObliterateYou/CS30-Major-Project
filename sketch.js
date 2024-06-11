@@ -48,6 +48,7 @@ let xMovementForCombat;
 let ignoringEnemy = false;
 let enemyMovementTimer = 0;
 let didEnemyTriggerCombat;
+let timeBetweenOpenWorldEnemyTurns = 500;
 
 // for the sprite grid
 const SLIME = 4;
@@ -131,12 +132,10 @@ function draw() {
     drawSpriteGrid();
     drawTallerTiles();
 
-    if (millis() >= enemyMovementTimer + 1000) {
-      for (let row of spriteGrid) {
-        for (let possibleEnemy of row) {
-          if (possibleEnemy instanceof slimeEnemy) {
-            possibleEnemy.movement();
-          }
+    for (let row of spriteGrid) {
+      for (let possibleEnemy of row) {
+        if (possibleEnemy instanceof slimeEnemy) {
+          possibleEnemy.movement();
         }
       }
     }
@@ -194,7 +193,7 @@ class slimeEnemy {
     this.combatTexture = battleSlimeImage;
   }
   movement() {
-    if (millis() > this.movementCounter + 1000 && gameState === "openWorld") {
+    if (millis() > this.movementCounter + timeBetweenOpenWorldEnemyTurns && gameState === "openWorld") {
       this.aiActivate();
       this.movementCounter = millis();
     }
@@ -209,29 +208,29 @@ class slimeEnemy {
   }
   verticalShuffleAI() {
     // checking what direction to travel and if collision with the player is imminent
-    if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - 1][this.xPosition] !== player) {
+    if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - this.dy][this.xPosition] !== player) {
       // going up
       // checking if it's close enough to a wall to turn around
-      if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible === true) {
+      if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible && spriteGrid[this.yPosition - this.dy][this.xPosition] === "") {
 
         this.move(0, -this.dy);
       }
-      else if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible === false) {
+      else {
         this.directionOfTravel = "down";
       }
     }
-    else if (this.directionOfTravel === "down") {
+    else if (this.directionOfTravel === "down" && spriteGrid[this.yPosition + this.dy][this.xPosition] !== player) {
       // going down
-      if (currentLevel[this.yPosition + this.dy + 2][this.xPosition].isPassible === true) {
+      if (currentLevel[this.yPosition + this.dy + 2][this.xPosition].isPassible && spriteGrid[this.yPosition + this.dy][this.xPosition] === "") {
 
         this.move(0, this.dy);
       }
-      else if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible === false) {
+      else {
         this.directionOfTravel = "up";
       }
     }
-    else if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - 1][this.xPosition] === player || // if the player is above and going up
-      this.directionOfTravel === "down" && spriteGrid[this.yPosition + 1][this.xPosition] === player) { // if the player is below and going down
+    else if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - this.dy][this.xPosition] === player || // if the player is above and going up
+      this.directionOfTravel === "down" && spriteGrid[this.yPosition + this.dy][this.xPosition] === player) { // if the player is below and going down
       enemy = this;
       didEnemyTriggerCombat = true;
       enterCombat(enemy);
@@ -239,39 +238,75 @@ class slimeEnemy {
   }
   horizontalShuffleAI() {
     // checking what direction to travel and if collision with the player is imminent
-    if (this.directionOfTravel === "left" && spriteGrid[this.y][this.x - 1] !== player) {
-      // going left
+    if (this.directionOfTravel === "left" && spriteGrid[this.yPosition][this.xPosition - this.dx] !== player) {
+      // going up
       // checking if it's close enough to a wall to turn around
-      if (currentLevel[this.y][this.x - this.dx - 2].isPassible === true
-        && this.directionOfTravel === "left") {
+      if (currentLevel[this.yPosition][this.xPosition - this.dx - 2].isPassible && spriteGrid[this.yPosition][this.xPosition - this.dx] === "") {
 
         this.move(-this.dx, 0);
       }
-      else if (currentLevel[this.y][this.x - this.dx - 2].isPassible === false
-        && this.directionOfTravel === "left") {
+      else {
         this.directionOfTravel = "right";
       }
     }
-    else if (this.directionOfTravel === "right") {
-      // going right
-      if (currentLevel[this.y][this.x + this.dx + 2].isPassible === true
-        && this.directionOfTravel === "right") {
-
+    else if (this.directionOfTravel === "right" && spriteGrid[this.yPosition][this.xPosition + this.dx] !== player) {
+      // going down
+      if (currentLevel[this.yPosition][this.xPosition + this.dx + 2].isPassible && spriteGrid[this.yPosition][this.xPosition + this.dx] === "") {
         this.move(this.dx, 0);
       }
-      else if (currentLevel[this.y][this.x + this.dx + 2].isPassible === false
-        && this.directionOfTravel === "right") {
+      else {
         this.directionOfTravel = "left";
       }
     }
-    else if (spriteGrid[this.y][this.x - 1 === player || this.x + 1 === player]) {
-      enterCombat(spriteGrid[this.yPosition][this.xPosition]);
+    else if (this.directionOfTravel === "left" && spriteGrid[this.yPosition][this.xPosition - this.dx] === player || // if the player is above and going up
+      this.directionOfTravel === "right" && spriteGrid[this.yPosition][this.xPosition + this.dx] === player) { // if the player is below and going down
+      enemy = this;
+      didEnemyTriggerCombat = true;
+      enterCombat(enemy);
     }
   }
-  circleAI() {
-    // currently unused
-  }
+
+  // horizontalShuffleAI() {
+  //   // checking what direction to travel and if collision with the player is imminent
+  //   if (this.directionOfTravel === "left" && spriteGrid[this.y][this.x - 1] !== player) {
+  //     // going left
+  //     // checking if it's close enough to a wall to turn around
+  //     if (currentLevel[this.y][this.x - this.dx - 2].isPassible === true
+  //       && this.directionOfTravel === "left") {
+
+  //       this.move(-this.dx, 0);
+  //     }
+  //     else if (currentLevel[this.y][this.x - this.dx - 2].isPassible === false
+  //       && this.directionOfTravel === "left") {
+  //       this.directionOfTravel = "right";
+  //     }
+  //   }
+  //   else if (this.directionOfTravel === "right") {
+  //     // going right
+  //     if (currentLevel[this.y][this.x + this.dx + 2].isPassible === true
+  //       && this.directionOfTravel === "right") {
+
+  //       this.move(this.dx, 0);
+  //     }
+  //     else if (currentLevel[this.y][this.x + this.dx + 2].isPassible === false
+  //       && this.directionOfTravel === "right") {
+  //       this.directionOfTravel = "left";
+  //     }
+  //   }
+  //   else if (spriteGrid[this.y][this.x - 1 === player || this.x + 1 === player]) {
+  //     enterCombat(spriteGrid[this.yPosition][this.xPosition]);
+  //   }
+  // }
+  // circleAI() {
+  //   // currently unused
+  // }
   move(dx, dy) {
+
+
+    // horizontal movement problem here
+
+
+
     spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
     this.yPosition += dy;
     this.xPosition += dx;
@@ -357,6 +392,10 @@ function endCombatVictory() {
     ignoringEnemy = true;
     movePlayer(xMovementForCombat, yMovementForCombat);
     ignoringEnemy = false;
+  }
+  else {
+    // is done automatically if the player triggers combat
+    spriteGrid[enemy.yPosition][enemy.xPosition] = "";
   }
   didEnemyTriggerCombat = false; // the default
 }
@@ -481,25 +520,29 @@ function levelShift(levelCode, doorCode) {
 }
 
 // [ypos, xpos, enemytype, level]
-let enemyLocations = [[12, 12, slimeEnemy, "l1"], [12, 18, slimeEnemy, "l1"], [18, 12, slimeEnemy, "l1"], [18, 18, slimeEnemy, "l1"],
+let enemyLocations = 
+// level one
+[[12, 12, slimeEnemy, "vertical", "up", "l1"], [12, 18, slimeEnemy, "vertical", "down", "l1"], [18, 12, slimeEnemy, "horizontal", "right", "l1"], [18, 18, slimeEnemy, "horizontal", "left", "l1"],
+// level two
 [5, 7, slimeEnemy, "l2"], [5, 12, slimeEnemy, "l2"],
+// level three
 [19, 19, slimeEnemy, "l3"], [18, 19, slimeEnemy, "l3"], [20, 19, slimeEnemy, "l3"], [19, 18, slimeEnemy, "l3"], [19, 20, slimeEnemy, "l3"]];
 
 function spawnEnemies() {
   for (let enemy of enemyLocations) {
     // levels.levelOne does not exist before initialization, so it cannot go in enemyLocations
-    if (enemy[3] === "l1") {
-      enemy[3] = levels.levelOne;
+    if (enemy[5] === "l1") {
+      enemy[5] = levels.levelOne;
     }
-    else if (enemy[3] === "l2") {
-      enemy[3] = levels.levelTwo;
+    else if (enemy[5] === "l2") {
+      enemy[5] = levels.levelTwo;
     }
-    else if (enemy[3] === "l3") {
-      enemy[3] = levels.levelThree;
+    else if (enemy[5] === "l3") {
+      enemy[5] = levels.levelThree;
     }
 
-    if (enemy[3] === currentLevel) {
-      spriteGrid[enemy[0]][enemy[1]] = new enemy[2](enemy[1], enemy[0], "vertical", "up");
+    if (enemy[5] === currentLevel) {
+      spriteGrid[enemy[0]][enemy[1]] = new enemy[2](enemy[1], enemy[0], enemy[3], enemy[4]);
     }
   }
 }
