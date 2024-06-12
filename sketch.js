@@ -48,7 +48,8 @@ let xMovementForCombat;
 let ignoringEnemy = false;
 let enemyMovementTimer = 0;
 let didEnemyTriggerCombat;
-let timeBetweenOpenWorldEnemyTurns = 500;
+let timeBetweenOpenWorldEnemyMovements = 250;
+let twoStepEnemyMovementStageOne = true;
 
 // for the sprite grid
 const SLIME = 4;
@@ -193,7 +194,7 @@ class slimeEnemy {
     this.combatTexture = battleSlimeImage;
   }
   movement() {
-    if (millis() > this.movementCounter + timeBetweenOpenWorldEnemyTurns && gameState === "openWorld") {
+    if (millis() > this.movementCounter + timeBetweenOpenWorldEnemyMovements && gameState === "openWorld") {
       this.aiActivate();
       this.movementCounter = millis();
     }
@@ -203,7 +204,7 @@ class slimeEnemy {
       this.verticalShuffleAI();
     }
     else if (this.ai === "horizontal") {
-      this.horizontalShuffleAI;
+      this.horizontalShuffleAI();
     }
   }
   verticalShuffleAI() {
@@ -264,55 +265,23 @@ class slimeEnemy {
       didEnemyTriggerCombat = true;
       enterCombat(enemy);
     }
+    else {
+      console.log("awfasf");
+    }
   }
-
-  // horizontalShuffleAI() {
-  //   // checking what direction to travel and if collision with the player is imminent
-  //   if (this.directionOfTravel === "left" && spriteGrid[this.y][this.x - 1] !== player) {
-  //     // going left
-  //     // checking if it's close enough to a wall to turn around
-  //     if (currentLevel[this.y][this.x - this.dx - 2].isPassible === true
-  //       && this.directionOfTravel === "left") {
-
-  //       this.move(-this.dx, 0);
-  //     }
-  //     else if (currentLevel[this.y][this.x - this.dx - 2].isPassible === false
-  //       && this.directionOfTravel === "left") {
-  //       this.directionOfTravel = "right";
-  //     }
-  //   }
-  //   else if (this.directionOfTravel === "right") {
-  //     // going right
-  //     if (currentLevel[this.y][this.x + this.dx + 2].isPassible === true
-  //       && this.directionOfTravel === "right") {
-
-  //       this.move(this.dx, 0);
-  //     }
-  //     else if (currentLevel[this.y][this.x + this.dx + 2].isPassible === false
-  //       && this.directionOfTravel === "right") {
-  //       this.directionOfTravel = "left";
-  //     }
-  //   }
-  //   else if (spriteGrid[this.y][this.x - 1 === player || this.x + 1 === player]) {
-  //     enterCombat(spriteGrid[this.yPosition][this.xPosition]);
-  //   }
-  // }
-  // circleAI() {
-  //   // currently unused
-  // }
   move(dx, dy) {
+    twoStepEnemyMovementStageOne = !twoStepEnemyMovementStageOne;
+    if (!twoStepEnemyMovementStageOne) {
+      spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
+      this.yPosition += dy;
+      this.xPosition += dx;
+      spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
+    }
 
-
-    // horizontal movement problem here
-
-
-
-    spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
-    this.yPosition += dy;
-    this.xPosition += dx;
-    spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
   }
 }
+
+
 
 // sets up all the stuff for combat that is called only once
 function enterCombat(enemy) {
@@ -643,7 +612,10 @@ function drawSpriteGrid() {
       if (spriteGrid[y][x] === player) {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
-      if (spriteGrid[y][x] instanceof slimeEnemy) {
+      if (spriteGrid[y][x] instanceof slimeEnemy && twoStepEnemyMovementStageOne) {
+        image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize - tileSize * 0.5, (y + movementOfScreenY) * tileSize + tileSize * 0.5, tileSize, tileSize);
+      }
+      else if (spriteGrid[y][x] instanceof slimeEnemy && !twoStepEnemyMovementStageOne) {
         image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
     }
