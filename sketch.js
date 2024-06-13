@@ -34,6 +34,8 @@ let slimeImage;
 let gameState = "openWorld";
 let enemyHealth;
 let battleSlimeImage;
+let minotaurImage;
+let battleMinotaurImage;
 let enemyAhead;
 let enemyType;
 let enemy;
@@ -72,6 +74,8 @@ function preload() {
   pathwayImage = loadImage("assets/tiles/pathway.jpg");
   slimeImage = loadImage("assets/sprites/slime.png");
   battleSlimeImage = loadImage("assets/sprites/slimeBattle.png");
+  minotaurImage = loadImage("assets/sprites/minotaur.png");
+  battleMinotaurImage = loadImage("assets/sprites/minotaur.png");
 }
 
 function setup() {
@@ -208,6 +212,12 @@ class slimeEnemy {
       this.horizontalShuffleAI();
       this.dy = 0;
     }
+    else if (this.ai === "circle") {
+      this.circleAI();
+    }
+  }
+  circleAI() {
+    
   }
   verticalShuffleAI() {
     // checking what direction to travel and if collision with the player is imminent
@@ -286,7 +296,117 @@ class slimeEnemy {
   }
 }
 
+class minotaurEnemy {
+  // just to be clear, the only minotaur that currently exists, does not move
 
+  constructor(x, y, aiType, startingDirection) {
+    this.xPosition = x;
+    this.yPosition = y;
+    this.ai = aiType;
+    this.dy = 1; // enemy movement distance per movement vertically
+    this.dx = 1; // enemy movement distance per movement horizontally
+    this.directionOfTravel = startingDirection;
+    this.movementCounter = 0;
+    this.currentHealth = 150;
+    this.maxHealth = 150;
+    this.attack = 30;
+    this.combatAI = "aggressive";
+    this.texture = minotaurImage;
+    this.combatTexture = battleMinotaurImage;
+    this.twoStepEnemyMovementStageOne = true;
+  }
+  movement() {
+    if (millis() > this.movementCounter + timeBetweenOpenWorldEnemyMovements && gameState === "openWorld") {
+      this.aiActivate();
+      this.movementCounter = millis();
+    }
+  }
+  aiActivate() {
+    if (this.ai === "vertical") {
+      this.verticalShuffleAI();
+      this.dx = 0;
+    }
+    else if (this.ai === "horizontal") {
+      this.horizontalShuffleAI();
+      this.dy = 0;
+    }
+  }
+  verticalShuffleAI() {
+    // checking what direction to travel and if collision with the player is imminent
+    if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - this.dy][this.xPosition] !== player) {
+      // going up
+      // checking if it's close enough to a wall to turn around
+      if (currentLevel[this.yPosition - this.dy - 2][this.xPosition].isPassible && spriteGrid[this.yPosition - this.dy][this.xPosition] === "") {
+
+        this.move(0, -this.dy);
+      }
+      else {
+        this.directionOfTravel = "down";
+        this.twoStepEnemyMovementStageOne = false; // sticks them in the center of their tile
+      }
+    }
+    else if (this.directionOfTravel === "down" && spriteGrid[this.yPosition + this.dy][this.xPosition] !== player) {
+      // going down
+      if (currentLevel[this.yPosition + this.dy + 2][this.xPosition].isPassible && spriteGrid[this.yPosition + this.dy][this.xPosition] === "") {
+
+        this.move(0, this.dy);
+      }
+      else {
+        this.directionOfTravel = "up";
+        this.twoStepEnemyMovementStageOne = false;
+      }
+    }
+    else if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - this.dy][this.xPosition] === player || // if the player is above and going up
+      this.directionOfTravel === "down" && spriteGrid[this.yPosition + this.dy][this.xPosition] === player) { // if the player is below and going down
+      enemy = this;
+      didEnemyTriggerCombat = true;
+      enterCombat(enemy);
+    }
+  }
+  horizontalShuffleAI() {
+    // checking what direction to travel and if collision with the player is imminent
+    if (this.directionOfTravel === "left" && spriteGrid[this.yPosition][this.xPosition - this.dx] !== player) {
+      // going up
+      // checking if it's close enough to a wall to turn around
+      if (currentLevel[this.yPosition][this.xPosition - this.dx - 2].isPassible && spriteGrid[this.yPosition][this.xPosition - this.dx] === "") {
+
+        this.move(-this.dx, 0);
+      }
+      else {
+        this.directionOfTravel = "right";
+        this.twoStepEnemyMovementStageOne = false; // sticks them in the center of their tile
+      }
+    }
+    else if (this.directionOfTravel === "right" && spriteGrid[this.yPosition][this.xPosition + this.dx] !== player) {
+      // going down
+      if (currentLevel[this.yPosition][this.xPosition + this.dx + 2].isPassible && spriteGrid[this.yPosition][this.xPosition + this.dx] === "") {
+        this.move(this.dx, 0);
+      }
+      else {
+        this.directionOfTravel = "left";
+        this.twoStepEnemyMovementStageOne = false;
+      }
+    }
+    else if (this.directionOfTravel === "left" && spriteGrid[this.yPosition][this.xPosition - this.dx] === player || // if the player is above and going up
+      this.directionOfTravel === "right" && spriteGrid[this.yPosition][this.xPosition + this.dx] === player) { // if the player is below and going down
+      enemy = this;
+      didEnemyTriggerCombat = true;
+      enterCombat(enemy);
+    }
+    else {
+      console.log("awfasf");
+    }
+  }
+  move(dx, dy) {
+    this.twoStepEnemyMovementStageOne = !this.twoStepEnemyMovementStageOne;
+    if (!this.twoStepEnemyMovementStageOne) {
+      spriteGrid[this.yPosition + dy][this.xPosition + dx] = this;
+      this.yPosition += dy;
+      this.xPosition += dx;
+      spriteGrid[this.yPosition - dy][this.xPosition - dx] = "";
+    }
+  }
+}
 
 // sets up all the stuff for combat that is called only once
 function enterCombat(enemy) {
@@ -493,14 +613,14 @@ function levelShift(levelCode, doorCode) {
   return;
 }
 
-// [ypos, xpos, enemytype, level]
+// [ypos, xpos, enemytype, level, direction of travel, level]
 let enemyLocations =
   // level one
   [[12, 12, slimeEnemy, "vertical", "up", "l1"], [12, 18, slimeEnemy, "vertical", "down", "l1"], [18, 12, slimeEnemy, "horizontal", "right", "l1"], [18, 18, slimeEnemy, "horizontal", "left", "l1"],
   // level two
-  [5, 7, slimeEnemy, "l2"], [5, 12, slimeEnemy, "l2"],
+  [5, 7, slimeEnemy, "vertical", "up", "l2"], [5, 12, slimeEnemy, "vertical", "down", "l2"],
   // level three
-  [19, 19, slimeEnemy, "l3"], [18, 19, slimeEnemy, "l3"], [20, 19, slimeEnemy, "l3"], [19, 18, slimeEnemy, "l3"], [19, 20, slimeEnemy, "l3"]];
+  [19, 19, minotaurEnemy, "", "", "l3"], [18, 20, slimeEnemy, "circle", "left", "l3"], [18, 18, slimeEnemy, "circle", "down", "l3"], [20, 20, slimeEnemy, "circle", "up", "l3"], [20, 18, slimeEnemy, "circle", "right", "l3"]];
 
 function spawnEnemies() {
   for (let enemy of enemyLocations) {
@@ -618,33 +738,24 @@ function drawSpriteGrid() {
         image(player.texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
       if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].twoStepEnemyMovementStageOne) {
-        // could be compressed but it's already hard enough to read
-        // left and right half step animations
         if (spriteGrid[y][x].directionOfTravel === "left") {
           // checking if a half step needs to be taken left
-          if (spriteGrid[y][x] instanceof slimeEnemy) {
-            image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize - tileSize * spriteGrid[y][x].dx / 2, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
-          }
-          // checking if a half step needs to be taken right
-          else if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].twoStepEnemyMovementStageOne) {
-            if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].directionOfTravel === "right") {
-              image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize + tileSize * spriteGrid[y][x].dx / 2, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
-            }
-          }
-          // checking if a half step needs to be taken up
-          else if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].twoStepEnemyMovementStageOne) {
-            if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].directionOfTravel === "up") {
-              image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize - tileSize * spriteGrid[y][x].dy / 2, tileSize, tileSize);
-            }
-          }
-          // checking if a half step needs to be taken down
-          else if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].twoStepEnemyMovementStageOne) {
-            if (spriteGrid[y][x] instanceof slimeEnemy && spriteGrid[y][x].directionOfTravel === "down") {
-              image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize + tileSize * spriteGrid[y][x].dy / 2, tileSize, tileSize);
-            }
-          }
+          image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize - tileSize * spriteGrid[y][x].dx / 2, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+        }
+        // checking if a half step needs to be taken right
+        else if (spriteGrid[y][x].directionOfTravel === "right") {
+          image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize + tileSize * spriteGrid[y][x].dx / 2, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+        }
+        // checking if a half step needs to be taken up
+        else if (spriteGrid[y][x].directionOfTravel === "up") {
+          image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize - tileSize * spriteGrid[y][x].dy / 2, tileSize, tileSize);
+        }
+        // checking if a half step needs to be taken down
+        else if (spriteGrid[y][x].directionOfTravel === "down") {
+          image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize + tileSize * spriteGrid[y][x].dy / 2, tileSize, tileSize);
         }
       }
+      // drawing the enemy in the middle of the tile, not halfway through
       else if (spriteGrid[y][x] instanceof slimeEnemy && !spriteGrid[y][x].twoStepEnemyMovementStageOne) {
         image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
