@@ -75,7 +75,7 @@ function preload() {
   slimeImage = loadImage("assets/sprites/slime.png");
   battleSlimeImage = loadImage("assets/sprites/slimeBattle.png");
   minotaurImage = loadImage("assets/sprites/minotaur.png");
-  battleMinotaurImage = loadImage("assets/sprites/minotaur.png");
+  battleMinotaurImage = loadImage("assets/sprites/minotaurBattle.png");
 }
 
 function setup() {
@@ -196,6 +196,7 @@ class slimeEnemy {
     this.texture = slimeImage;
     this.combatTexture = battleSlimeImage;
     this.twoStepEnemyMovementStageOne = true;
+    this.twoTileTurnCounter = 0;
   }
   movement() {
     if (millis() > this.movementCounter + timeBetweenOpenWorldEnemyMovements && gameState === "openWorld") {
@@ -217,7 +218,52 @@ class slimeEnemy {
     }
   }
   circleAI() {
-    
+    // all directiions of travel place the enemy in the corners
+    // this is a counterclockwise circle
+
+    // checking for the player in the intended direction here for simplicity
+    if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - this.dy][this.xPosition] !== player || // checking for player above
+      this.directionOfTravel === "down" && spriteGrid[this.yPosition + this.dy][this.xPosition] !== player || // checking for player below
+      this.directionOfTravel === "right" && spriteGrid[this.yPosition][this.xPosition - this.dx] !== player || // checking for player to the right
+      this.directionOfTravel === "left" && spriteGrid[this.yPosition][this.xPosition + this.dx] !== player) // checking for player left
+    {
+      if (this.directionOfTravel === "up") {
+        this.twoTileTurnCounter += 1;
+        // if the enemy has moved a number of times divisible by 4 (because this movement is called twice per tile) 
+        // and this is not the first movement, move and change direction, otherwise just move;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "left";
+        }
+        this.move(0, -this.dy);
+      }
+      else if (this.directionOfTravel === "left") {
+        this.twoTileTurnCounter += 1;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "down";
+        }
+        this.move(-this.dx, 0);
+      }
+      else if (this.directionOfTravel === "down") {
+        this.twoTileTurnCounter += 1;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "right";
+        }
+        this.move(0, this.dy);
+      }
+      else if (this.directionOfTravel === "right") {
+        this.twoTileTurnCounter += 1;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "up";
+        }
+        this.move(this.dx, 0);
+      }
+    }
+    // if there is the player in the way
+    else {
+      enemy = this;
+      didEnemyTriggerCombat = true;
+      enterCombat(enemy);
+    }
   }
   verticalShuffleAI() {
     // checking what direction to travel and if collision with the player is imminent
@@ -281,9 +327,6 @@ class slimeEnemy {
       didEnemyTriggerCombat = true;
       enterCombat(enemy);
     }
-    else {
-      console.log("awfasf");
-    }
   }
   move(dx, dy) {
     this.twoStepEnemyMovementStageOne = !this.twoStepEnemyMovementStageOne;
@@ -297,8 +340,6 @@ class slimeEnemy {
 }
 
 class minotaurEnemy {
-  // just to be clear, the only minotaur that currently exists, does not move
-
   constructor(x, y, aiType, startingDirection) {
     this.xPosition = x;
     this.yPosition = y;
@@ -393,8 +434,53 @@ class minotaurEnemy {
       didEnemyTriggerCombat = true;
       enterCombat(enemy);
     }
+  }
+  circleAI() {
+    // all directiions of travel place the enemy in the corners
+    // this is a counterclockwise circle
+
+    // checking for the player in the intended direction here for simplicity
+    if (this.directionOfTravel === "up" && spriteGrid[this.yPosition - this.dy][this.xPosition] !== player || // checking for player above
+      this.directionOfTravel === "down" && spriteGrid[this.yPosition + this.dy][this.xPosition] !== player || // checking for player below
+      this.directionOfTravel === "right" && spriteGrid[this.yPosition][this.xPosition - this.dx] !== player || // checking for player to the right
+      this.directionOfTravel === "left" && spriteGrid[this.yPosition][this.xPosition + this.dx] !== player) // checking for player left
+    {
+      if (this.directionOfTravel === "up") {
+        this.twoTileTurnCounter += 1;
+        // if the enemy has moved a number of times divisible by 4 (because this movement is called twice per tile) 
+        // and this is not the first movement, move and change direction, otherwise just move;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "left";
+        }
+        this.move(0, -this.dy);
+      }
+      else if (this.directionOfTravel === "left") {
+        this.twoTileTurnCounter += 1;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "down";
+        }
+        this.move(-this.dx, 0);
+      }
+      else if (this.directionOfTravel === "down") {
+        this.twoTileTurnCounter += 1;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "right";
+        }
+        this.move(0, this.dy);
+      }
+      else if (this.directionOfTravel === "right") {
+        this.twoTileTurnCounter += 1;
+        if (this.twoTileTurnCounter % 4 === 0 && this.twoTileTurnCounter !== 0) {
+          this.directionOfTravel = "up";
+        }
+        this.move(this.dx, 0);
+      }
+    }
+    // if there is the player in the way
     else {
-      console.log("awfasf");
+      enemy = this;
+      didEnemyTriggerCombat = true;
+      enterCombat(enemy);
     }
   }
   move(dx, dy) {
@@ -461,6 +547,12 @@ function loadCombat(enemy) {
   // these if statements are kept seperate for the sake of new ai types
   if (millis() >= turnTimer + 500 && combatTurn === "enemy") {
     if (enemy.combatAI === "hyperAggressive") {
+      player.health -= enemy.attack;
+      turnTimer = millis();
+      combatTurn = "player";
+    }
+    // I don't have time to make a more complex ai, so aggresive = hyperAggresive
+    else if (enemy.comabtAi === "aggresive") {
       player.health -= enemy.attack;
       turnTimer = millis();
       combatTurn = "player";
@@ -616,10 +708,12 @@ function levelShift(levelCode, doorCode) {
 // [ypos, xpos, enemytype, level, direction of travel, level]
 let enemyLocations =
   // level one
-  [[12, 12, slimeEnemy, "vertical", "up", "l1"], [12, 18, slimeEnemy, "vertical", "down", "l1"], [18, 12, slimeEnemy, "horizontal", "right", "l1"], [18, 18, slimeEnemy, "horizontal", "left", "l1"],
+  // vertical, up
+  [[12, 12, minotaurEnemy, "", "", "l1"], [12, 18, slimeEnemy, "vertical", "down", "l1"], [18, 12, slimeEnemy, "horizontal", "right", "l1"], [18, 18, slimeEnemy, "horizontal", "left", "l1"],
   // level two
   [5, 7, slimeEnemy, "vertical", "up", "l2"], [5, 12, slimeEnemy, "vertical", "down", "l2"],
   // level three
+  // the minotaur's fourth and fifth argument are blank, so it never moves
   [19, 19, minotaurEnemy, "", "", "l3"], [18, 20, slimeEnemy, "circle", "left", "l3"], [18, 18, slimeEnemy, "circle", "down", "l3"], [20, 20, slimeEnemy, "circle", "up", "l3"], [20, 18, slimeEnemy, "circle", "right", "l3"]];
 
 function spawnEnemies() {
@@ -759,6 +853,9 @@ function drawSpriteGrid() {
       else if (spriteGrid[y][x] instanceof slimeEnemy && !spriteGrid[y][x].twoStepEnemyMovementStageOne) {
         image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
       }
+      if (spriteGrid[y][x] instanceof minotaurEnemy) {
+        image(spriteGrid[y][x].texture, (x + movementOfScreenX) * tileSize, (y + movementOfScreenY) * tileSize, tileSize, tileSize);
+      }
     }
   }
 }
@@ -796,11 +893,11 @@ function checkIfEnemyInTheWay(xMovement, yMovement) {
   // this only works if the absolute value of xMovement and yMovement never exceed 1
 
   // checking below and above, right and left
-  if (spriteGrid[player.yPosition + yMovement][player.xPosition] instanceof slimeEnemy) {
+  if (spriteGrid[player.yPosition + yMovement][player.xPosition] instanceof slimeEnemy || spriteGrid[player.yPosition + yMovement][player.xPosition] instanceof minotaurEnemy) {
     enemy = spriteGrid[player.yPosition + yMovement][player.xPosition];
     return true;
   }
-  else if (spriteGrid[player.yPosition][player.xPosition + xMovement] instanceof slimeEnemy) {
+  else if (spriteGrid[player.yPosition][player.xPosition + xMovement] instanceof slimeEnemy || spriteGrid[player.yPosition][player.xPosition + xMovement] instanceof minotaurEnemy) {
     enemy = spriteGrid[player.yPosition][player.xPosition + xMovement];
     return true;
   }
