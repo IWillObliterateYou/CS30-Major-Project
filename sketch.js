@@ -51,6 +51,7 @@ let ignoringEnemy = false;
 let enemyMovementTimer = 0;
 let didEnemyTriggerCombat;
 let timeBetweenOpenWorldEnemyMovements = 250;
+let startGameButton;
 
 // for the sprite grid
 const SLIME = 4;
@@ -98,6 +99,8 @@ function setup() {
 
   generateSpriteOverlayGrid();
   spawnEnemies();
+
+  titleScreenButtons();
 }
 
 function givePropertiesToTiles() {
@@ -153,6 +156,10 @@ function draw() {
     textAlign(CENTER, CENTER);
     textSize(100);
     text("You Died", width / 2, height / 2);
+  }
+  // doesn't work so it is never called
+  else if (gameState === "titleScreen") {
+    titleScreen();
   }
 }
 
@@ -552,7 +559,7 @@ function loadCombat(enemy) {
       combatTurn = "player";
     }
     // I don't have time to make a more complex ai, so aggresive = hyperAggresive
-    else if (enemy.comabtAi === "aggresive") {
+    else if (enemy.combatAI === "aggressive") {
       player.health -= enemy.attack;
       turnTimer = millis();
       combatTurn = "player";
@@ -708,8 +715,7 @@ function levelShift(levelCode, doorCode) {
 // [ypos, xpos, enemytype, level, direction of travel, level]
 let enemyLocations =
   // level one
-  // vertical, up
-  [[12, 12, minotaurEnemy, "", "", "l1"], [12, 18, slimeEnemy, "vertical", "down", "l1"], [18, 12, slimeEnemy, "horizontal", "right", "l1"], [18, 18, slimeEnemy, "horizontal", "left", "l1"],
+  [[12, 12, slimeEnemy, "vertical", "up", "l1"], [12, 18, slimeEnemy, "horizontal", "right", "l1"], [18, 12, slimeEnemy, "horizontal", "left", "l1"], [18, 18, slimeEnemy, "vertical", "down", "l1"],
   // level two
   [5, 7, slimeEnemy, "vertical", "up", "l2"], [5, 12, slimeEnemy, "vertical", "down", "l2"],
   // level three
@@ -735,12 +741,35 @@ function spawnEnemies() {
   }
 }
 
+function titleScreenButtons() {
+  startGameButton = new Clickable();
+  startGameButton.locate(width / 2 - width / 6, height / 2 - height / 6);
+  startGameButton.resize(width / 3, height / 3);
+  startGameButton.textSize = height / 4;
+  startGameButton.text = "Begin";
+
+  startGameButton.onHover = function () {
+    startGameButton.color = "#d73e23";
+  };
+  startGameButton.onOutside = function () {
+    startGameButton.color = "#873e23";
+  };
+  startGameButton.onRelease = function() {
+    gameState = "openWorld";
+  };
+}
+
+// doesn't work so it is never called
 function titleScreen() {
   // sky background
   background(0, 220, 255);
+  titleScreenButtons();
 
   // a mountain midground
   // a forest foreground
+
+  // buttons
+  startGameButton.draw();
 }
 
 function shouldTileBeTreatedAsDoor(levelDoors) {
@@ -966,8 +995,6 @@ function keyPressed() {
     // on cross line
     // at top
     else if (player.yPosition === Math.floor(TILES_ON_SCREEN_VERTICALLY / 2)) {
-
-
       if (key === "w" && currentLevel[player.yPosition - 1][player.xPosition].isPassible === true) {
         movePlayer(0, -1);
       }
